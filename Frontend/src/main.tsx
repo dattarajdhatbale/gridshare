@@ -237,7 +237,7 @@ export default function App() {
                 selectedMeter={liveSelected}
                 lifetimeSavings={1248.50 + (ledger[liveSelected.id] || 0)}
             />
-            <main className="max-w-[1260px] w-full mx-auto my-0 py-10 px-2 sm:px-4 pb-[30px] flex-1">
+            <main className="w-full px-4 sm:px-6 my-0 py-3 pb-3 flex-1">
                 <section className="grid grid-cols-[1fr_2fr] gap-6 items-stretch mb-9 max-[850px]:flex max-[850px]:flex-col max-[850px]:gap-5">
                     <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[16px] p-6 shadow-[var(--card-shadow)] flex flex-col gap-3 min-w-[320px] max-w-full">
                         <div className="flex justify-between items-center gap-2">
@@ -364,9 +364,29 @@ export default function App() {
                     reset={handleReset}
                 />
 
-                <footer className="flex justify-between text-[var(--text-muted)] font-mono text-[11px] pt-6 px-1 pb-3 border-t border-[var(--line)] mt-10 max-[520px]:block max-[520px]:leading-[2]">
-                    <span className="flex items-center gap-2"><span className="inline-block w-2 h-2 bg-[#10b981] rounded-full shadow-[0_0_0_4px_var(--lime-glow)] animate-pulse" /> SIMULATED DATA · SEE HOW IT WORKS</span>
-                    <span>GridShare prototype · Built for AVINYA 2026</span>
+                <footer className="mt-12 pt-6 pb-8 border-t border-[var(--line)] flex flex-col gap-5 text-[var(--text-muted)] font-mono text-[11px]">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-2 font-medium text-[var(--text-secondary)]">
+                                <span className="inline-block w-2 h-2 bg-[#10b981] rounded-full shadow-[0_0_0_4px_var(--lime-glow)] animate-pulse" />
+                                P2P Settlement Engine Active
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-5 text-[11px] text-[var(--text-secondary)]">
+                            <span className="hover:text-[var(--text-primary)] transition-colors cursor-default">Privacy</span>
+                            <span className="hover:text-[var(--text-primary)] transition-colors cursor-default">Terms</span>
+                            <span className="hover:text-[var(--text-primary)] transition-colors cursor-default">Security</span>
+                            <span className="font-mono px-2 py-0.5 rounded bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.18)] text-lime text-[10px]">
+                                v2.4-live
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t border-[var(--line)] text-[10.5px]">
+                        <span>© {new Date().getFullYear()} GridShare. Decentralized local energy exchange protocol.</span>
+                        <span className="text-[var(--text-secondary)]">Local marginal pricing &amp; continuous double auction matching.</span>
+                    </div>
                 </footer>
             </main>
 

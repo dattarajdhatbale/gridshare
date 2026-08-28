@@ -16,18 +16,18 @@ export function TopologyGraph({
   activePartners = [],
 }: TopologyGraphProps) {
   const pts = [
-    [70, 75],
-    [180, 125],
-    [300, 70],
-    [430, 80],
-    [545, 105],
-    [535, 205],
-    [490, 270],
-    [320, 220],
-    [90, 225],
-    [210, 285],
-    [370, 285],
-    [405, 165],
+    [70, 70],
+    [175, 115],
+    [300, 60],
+    [430, 70],
+    [545, 95],
+    [535, 185],
+    [480, 235],
+    [315, 195],
+    [85, 195],
+    [205, 240],
+    [355, 240],
+    [415, 150],
   ];
 
   const connections: [number, number][] = [
@@ -133,7 +133,7 @@ export function TopologyGraph({
                 r={m.id === selected.id ? 17 : 12}
                 className={`${m.role} ${m.id === selected.id ? 'selected' : ''}`}
               />
-              <text y={31} textAnchor="middle">
+              <text y={28} textAnchor="middle">
                 {m.id}
               </text>
               {m.id === selected.id && <circle r="21" className="ring" />}

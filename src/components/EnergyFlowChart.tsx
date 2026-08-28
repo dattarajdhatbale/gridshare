@@ -7,7 +7,7 @@ interface EnergyFlowChartProps {
 
 export function EnergyFlowChart({ meter, earned = 0 }: EnergyFlowChartProps) {
   const netValue = meter.generation - meter.load;
-  const selfConsumption = meter.generation > 0 
+  const selfConsumption = meter.generation > 0
     ? Math.round(Math.min(100, (meter.load / meter.generation) * 100))
     : 0;
 

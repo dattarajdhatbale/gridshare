@@ -1,0 +1,64 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model SimulationState {
+  id                 Int     @id @default(1)
+  tick               Int     @default(62)
+  playing            Boolean @default(true)
+  speed              String  @default("1x")
+  cumulativeBaseline Float   @default(0.0)
+}
+
+model Meter {
+  id             String @id
+  name           String
+  role           String // "solar", "consumer", "prosumer"
+  pv             Float
+  baseLoad       Float
+  distance       Float
+  earned         Float  @default(0.0)
+  sharedPartners String @default("") // Comma-separated list of meter IDs, e.g. "M-02,M-03"
+}
+
+model MeterReading {
+  id          Int    @id @default(autoincrement())
+  tick        Int
+  meterId     String
+  generation  Float
+  load        Float
+  exportKWh   Float
+  importKWh   Float
+  voltage     Float
+  current     Float
+  powerFactor Float
+
+  @@index([tick])
+  @@index([meterId])
+}
+
+model Trade {
+  id             String   @id
+  tick           Int
+  buyer          String
+  seller         String
+  sent           Float
+  delivered      Float
+  lossKWh        Float
+  distance       Float
+  lossFrac       Float
+  nCharge        Float
+  energyPrice    Float
+  buyerUnitPrice Float
+  buyerPayment   Float
+  sellerRevenue  Float
+  networkRevenue Float
+  createdAt      DateTime @default(now())
+
+  @@index([tick])
+}

@@ -1,23 +1,14 @@
 # Dependencies
 node_modules/
-/.pnp
-.pnp.js
-/Backend/node_modules
+.pnpm-store/
+prompt.md
+demo/
 
-# Testing
-/coverage
-
-# Production / Builds
+# Build outputs
 dist/
+dist-ssr/
 build/
-.tsbuildinfo
-
-# SQLite Database / Prisma local files
-*.db
-*.db-journal
-*.db-shm
-*.db-wal
-/Backend/prisma/dev.db
+*.local
 
 # Environment variables
 .env
@@ -31,8 +22,19 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-# Operating System Files
+# Editor & OS files
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 .DS_Store
 Thumbs.db
+
+# Temporary uploads & prompt files
+uploads/
+*-build-prompt-*.md

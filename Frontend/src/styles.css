@@ -1,5 +1,6 @@
 /* Design System & Themes */
-:root, :root[data-theme="light"] {
+:root,
+:root[data-theme="light"] {
   --font-sans: 'Outfit', 'DM Sans', -apple-system, sans-serif;
   --font-title: 'Space Grotesk', 'Outfit', sans-serif;
   --font-mono: 'DM Mono', monospace;
@@ -8,9 +9,9 @@
   --bg-color: #f2f7f5;
   --bg-gradient: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 65%);
   --grid-line: rgba(16, 185, 129, 0.04);
-  
+
   --card-bg: rgba(255, 255, 255, 0.78);
-  --card-border: rgba(16, 185, 129, 0.12);
+  --card-border: transparent;
   --card-shadow: 0 8px 30px rgba(0, 50, 30, 0.04), 0 0 1px rgba(16, 185, 129, 0.1);
   --card-glow: rgba(16, 185, 129, 0.02);
 
@@ -21,7 +22,8 @@
   --muted: #5d7570;
   --line: rgba(16, 185, 129, 0.08);
 
-  --lime: #10b981; /* emerald/green accent */
+  --lime: #10b981;
+  /* emerald/green accent */
   --lime-glow: rgba(16, 185, 129, 0.25);
   --mint: #e8fbf3;
   --orange: #f59e0b;
@@ -33,7 +35,7 @@
   --button-primary-bg: #10b981;
   --button-primary-hover: #059669;
   --button-primary-text: #ffffff;
-  
+
   --button-outline-bg: rgba(255, 255, 255, 0.9);
   --button-outline-border: rgba(16, 185, 129, 0.18);
   --button-outline-hover: rgba(16, 185, 129, 0.06);
@@ -43,7 +45,7 @@
   --node-consumer: #6b7280;
   --edge-active: #10b981;
   --edge-inactive: #d1dbd6;
-  
+
   --chart-area: rgba(16, 185, 129, 0.06);
   --chart-solar: #10b981;
   --chart-load: #f59e0b;
@@ -53,9 +55,9 @@
   --bg-color: #040c0a;
   --bg-gradient: radial-gradient(circle at 50% 0%, rgba(0, 255, 136, 0.09) 0%, transparent 65%);
   --grid-line: rgba(0, 255, 136, 0.03);
-  
+
   --card-bg: rgba(10, 24, 21, 0.65);
-  --card-border: rgba(0, 255, 136, 0.15);
+  --card-border: transparent;
   --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 255, 136, 0.15);
   --card-glow: rgba(0, 255, 136, 0.04);
 
@@ -66,7 +68,8 @@
   --muted: #85a29c;
   --line: rgba(0, 255, 136, 0.08);
 
-  --lime: #00ff88; /* neon green accent */
+  --lime: #00ff88;
+  /* neon green accent */
   --lime-glow: rgba(0, 255, 136, 0.3);
   --mint: #0c201b;
   --orange: #ff9f43;
@@ -102,7 +105,7 @@
 body {
   margin: 0;
   background-color: var(--bg-color);
-  background-image: 
+  background-image:
     var(--bg-gradient),
     linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
     linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
@@ -209,14 +212,20 @@ header {
 }
 
 .logo {
-  background: var(--ink);
-  color: var(--lime);
+  background: transparent;
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.logo-svg-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
 .brand b {
@@ -226,7 +235,9 @@ header {
   color: var(--text-primary);
 }
 
-.brand span, label, small {
+.brand span,
+label,
+small {
   font: 500 10px var(--font-mono);
   letter-spacing: .12em;
   color: var(--text-secondary);
@@ -344,7 +355,8 @@ main {
   color: var(--text-primary);
 }
 
-.hero h1 em, .pricing h2 em {
+.hero h1 em,
+.pricing h2 em {
   font-style: normal;
   color: var(--lime);
   font-weight: 500;
@@ -365,7 +377,8 @@ main {
 }
 
 /* Buttons */
-.primary, .outline {
+.primary,
+.outline {
   font: 600 13px var(--font-sans);
   border-radius: 10px;
   padding: 12px 18px;
@@ -415,7 +428,7 @@ main {
   overflow: hidden;
 }
 
-.ticker > div {
+.ticker>div {
   padding: 20px 24px;
   border-right: 1px solid var(--line);
   display: flex;
@@ -423,7 +436,7 @@ main {
   justify-content: center;
 }
 
-.ticker > div:last-child {
+.ticker>div:last-child {
   border: 0;
 }
 
@@ -449,7 +462,9 @@ main {
   font-weight: 600;
 }
 
-.up, .down, .good {
+.up,
+.down,
+.good {
   font: 11px var(--font-mono);
   display: flex;
   gap: 4px;
@@ -457,9 +472,17 @@ main {
   font-weight: 500;
 }
 
-.up { color: #10b981; }
-.down { color: var(--orange); }
-.good { color: #10b981; }
+.up {
+  color: #10b981;
+}
+
+.down {
+  color: var(--orange);
+}
+
+.good {
+  color: #10b981;
+}
 
 .lmp {
   background: var(--mint);
@@ -552,7 +575,8 @@ main {
   letter-spacing: -0.02em;
 }
 
-.metric span, .muted {
+.metric span,
+.muted {
   color: var(--text-secondary);
   font-size: 13px;
 }
@@ -623,8 +647,13 @@ main {
   margin-right: 6px;
 }
 
-.solar-dot { background: var(--chart-solar); }
-.load-dot { background: var(--chart-load); }
+.solar-dot {
+  background: var(--chart-solar);
+}
+
+.load-dot {
+  background: var(--chart-load);
+}
 
 .now {
   margin-left: auto;
@@ -673,7 +702,7 @@ main {
   margin-bottom: 12px;
 }
 
-.price-scale div > span {
+.price-scale div>span {
   font: 600 24px var(--font-title);
   color: var(--text-primary);
 }
@@ -802,9 +831,17 @@ main {
   transition: all 0.2s ease;
 }
 
-.node .solar { fill: var(--node-solar); }
-.node .prosumer { fill: var(--node-prosumer); }
-.node .consumer { fill: var(--node-consumer); }
+.node .solar {
+  fill: var(--node-solar);
+}
+
+.node .prosumer {
+  fill: var(--node-prosumer);
+}
+
+.node .consumer {
+  fill: var(--node-consumer);
+}
 
 .node .selected {
   stroke: var(--text-primary);
@@ -840,9 +877,17 @@ main {
   margin-right: 6px;
 }
 
-.node-key.solar { background: var(--node-solar); }
-.node-key.prosumer { background: var(--node-prosumer); }
-.node-key.consumer { background: var(--node-consumer); }
+.node-key.solar {
+  background: var(--node-solar);
+}
+
+.node-key.prosumer {
+  background: var(--node-prosumer);
+}
+
+.node-key.consumer {
+  background: var(--node-consumer);
+}
 
 .edge-key {
   display: inline-block;
@@ -860,7 +905,7 @@ main {
   margin-top: 18px;
 }
 
-.book > div > small {
+.book>div>small {
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
@@ -886,8 +931,13 @@ main {
   font-weight: 600;
 }
 
-.order.ask strong { color: var(--orange); }
-.order.bid strong { color: var(--lime); }
+.order.ask strong {
+  color: var(--orange);
+}
+
+.order.bid strong {
+  color: var(--lime);
+}
 
 .clear-note {
   background: var(--mint);
@@ -941,7 +991,8 @@ main {
   color: var(--text-primary);
 }
 
-.trade-main span, .trade-price span {
+.trade-main span,
+.trade-price span {
   display: block;
   font: 10px var(--font-mono);
   color: var(--text-secondary);
@@ -1023,7 +1074,8 @@ main {
   padding: 16px 0;
 }
 
-.counterparty b, .counterparty span {
+.counterparty b,
+.counterparty span {
   display: block;
 }
 
@@ -1061,7 +1113,8 @@ main {
   padding: 16px 24px;
 }
 
-.controls small, .controls b {
+.controls small,
+.controls b {
   display: block;
 }
 
@@ -1184,20 +1237,46 @@ footer span {
 
 /* Animations */
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 var(--lime-glow); }
-  70% { box-shadow: 0 0 0 6px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
+  0% {
+    box-shadow: 0 0 0 0 var(--lime-glow);
+  }
+
+  70% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.1); opacity: 0.4; }
-  100% { transform: scale(0.95); opacity: 0.8; }
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 0.4;
+  }
+
+  100% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
 }
 
 @keyframes scaleUp {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .pulse {
@@ -1205,7 +1284,9 @@ footer span {
 }
 
 @keyframes pricePulse {
-  50% { box-shadow: 0 0 0 6px var(--lime-glow); }
+  50% {
+    box-shadow: 0 0 0 6px var(--lime-glow);
+  }
 }
 
 /* Responsive Overrides */
@@ -1213,36 +1294,48 @@ footer span {
   main {
     padding-top: 24px;
   }
+
   .hero {
     display: block;
   }
+
   .hero-actions {
     margin-top: 20px;
   }
+
   .ticker {
     grid-template-columns: 1fr 1fr;
   }
-  .ticker > div:nth-child(2) {
+
+  .ticker>div:nth-child(2) {
     border-right: 0;
   }
-  .ticker > div:nth-child(3) {
+
+  .ticker>div:nth-child(3) {
     border-top: 1px solid var(--line);
   }
-  .top, .bottom {
+
+  .top,
+  .bottom {
     grid-template-columns: 1fr;
   }
+
   .sim {
     display: none;
   }
+
   header {
     padding: 0 20px;
   }
+
   .profile-container {
     border-right: 0;
     padding-right: 0;
   }
+
   .brand {
-    display: none; /* Hide brand to save space on tablet */
+    display: none;
+    /* Hide brand to save space on tablet */
   }
 }
 
@@ -1250,29 +1343,120 @@ footer span {
   .ticker {
     grid-template-columns: 1fr;
   }
-  .ticker > div {
+
+  .ticker>div {
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
+
   .chart-foot {
     grid-template-columns: 1fr 1fr;
     gap: 15px;
   }
+
   .controls {
     display: block;
   }
+
   .controls input {
     width: 100%;
     margin: 16px 0;
   }
+
   .speed {
     justify-content: flex-end;
   }
+
   footer {
     display: block;
     line-height: 2;
   }
+
   .hero-actions {
     flex-wrap: wrap;
+  }
+}
+
+/* Hero Stat Card Styles */
+.hero-stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 520px;
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.stat-dot.green {
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime-glow);
+}
+
+.stat-title {
+  font: 600 10px var(--font-mono);
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+.stat-body {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-item label {
+  font: 500 9px var(--font-mono);
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.stat-val {
+  font: 600 20px var(--font-title);
+  color: var(--text-primary);
+}
+
+.stat-footer {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.updated-time {
+  font: 11px var(--font-mono);
+  color: var(--text-muted);
+}
+
+/* Active Trade Flow Animation */
+.active-trade-line {
+  stroke: var(--lime);
+  stroke-width: 3.5;
+  stroke-dasharray: 6 4;
+  animation: flow-dash 1.2s linear infinite;
+  filter: drop-shadow(0 0 3px var(--lime-glow));
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -20;
   }
 }

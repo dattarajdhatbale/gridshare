@@ -135,68 +135,77 @@ class SimulationEngine {
     await this.runSimulationStep(targetTick);
   }
 
+  private isProcessing = false;
+
   private async tick() {
-    let state = await prisma.simulationState.findUnique({ where: { id: 1 } });
-    if (!state) return;
+    if (this.isProcessing) return;
+    this.isProcessing = true;
+    try {
+      let state = await prisma.simulationState.findUnique({ where: { id: 1 } });
+      if (!state) return;
 
-    const nextTick = (state.tick + 1) % 96;
-    await prisma.simulationState.update({
-      where: { id: 1 },
-      data: { tick: nextTick },
-    });
+      const nextTick = (state.tick + 1) % 96;
+      await prisma.simulationState.update({
+        where: { id: 1 },
+        data: { tick: nextTick },
+      });
 
-    await this.runSimulationStep(nextTick);
+      await this.runSimulationStep(nextTick);
+    } catch (err) {
+      console.error('Error during tick processing:', err);
+    } finally {
+      this.isProcessing = false;
+    }
   }
 
   private async runSimulationStep(tick: number) {
-    // 1. Fetch current database states
-    const dbMeters = await prisma.meter.findMany();
-    const state = await prisma.simulationState.findUnique({ where: { id: 1 } });
-    if (!state) return;
+    try {
+      // 1. Fetch current database states
+      const dbMeters = await prisma.meter.findMany();
+      const state = await prisma.simulationState.findUnique({ where: { id: 1 } });
+      if (!state) return;
 
-    // 2. Compute physics (generation and load)
-    const simulatedMeters = simulateMetersForTick(tick, dbMeters);
+      // 2. Compute physics (generation and load)
+      const simulatedMeters = simulateMetersForTick(tick, dbMeters);
 
-    // 3. Resolve market trading clearing
-    const trades = optimizeTrades(simulatedMeters);
+      // 3. Resolve market trading clearing
+      const trades = optimizeTrades(simulatedMeters);
 
-    // 4. Update the DB: accumulate savings, ledger, counterparties, and baseline utility
-    let tickBaseline = 0;
-    const meterEarningsUpdate: Record<string, { earned: number; partner: string }> = {};
+      // 4. Update the DB: accumulate savings, ledger, counterparties, and baseline utility
+      let tickBaseline = 0;
+      const meterEarningsUpdate: Record<string, { earned: number; partner: string }> = {};
 
-    trades.forEach((t) => {
-      tickBaseline += t.kwh * PFIT;
+      trades.forEach((t) => {
+        tickBaseline += t.kwh * PFIT;
 
-      const seller = simulatedMeters.find((m) => m.name === t.seller || m.id === t.seller);
-      const buyer = simulatedMeters.find((m) => m.name === t.buyer || m.id === t.buyer);
+        const seller = simulatedMeters.find((m) => m.name === t.seller || m.id === t.seller);
+        const buyer = simulatedMeters.find((m) => m.name === t.buyer || m.id === t.buyer);
 
-      if (seller) {
-        const gain = t.sent * (t.energyPrice - PFIT);
-        if (!meterEarningsUpdate[seller.id]) {
-          meterEarningsUpdate[seller.id] = { earned: 0, partner: '' };
-        }
-        meterEarningsUpdate[seller.id].earned += gain;
-        if (buyer) {
-          meterEarningsUpdate[seller.id].partner = buyer.id;
-        }
-      }
-
-      if (buyer) {
-        const saving = t.delivered * (PGRID - t.buyerUnitPrice);
-        if (!meterEarningsUpdate[buyer.id]) {
-          meterEarningsUpdate[buyer.id] = { earned: 0, partner: '' };
-        }
-        meterEarningsUpdate[buyer.id].earned += saving;
         if (seller) {
-          meterEarningsUpdate[buyer.id].partner = seller.id;
+          const gain = t.sent * (t.energyPrice - PFIT);
+          if (!meterEarningsUpdate[seller.id]) {
+            meterEarningsUpdate[seller.id] = { earned: 0, partner: '' };
+          }
+          meterEarningsUpdate[seller.id].earned += gain;
+          if (buyer) {
+            meterEarningsUpdate[seller.id].partner = buyer.id;
+          }
         }
-      }
-    });
 
-    // Write increments to database
-    await prisma.$transaction(async (tx) => {
-      // Update cumulative baseline
-      await tx.simulationState.update({
+        if (buyer) {
+          const saving = t.delivered * (PGRID - t.buyerUnitPrice);
+          if (!meterEarningsUpdate[buyer.id]) {
+            meterEarningsUpdate[buyer.id] = { earned: 0, partner: '' };
+          }
+          meterEarningsUpdate[buyer.id].earned += saving;
+          if (seller) {
+            meterEarningsUpdate[buyer.id].partner = seller.id;
+          }
+        }
+      });
+
+      // 5. Update cumulative baseline
+      await prisma.simulationState.update({
         where: { id: 1 },
         data: {
           cumulativeBaseline: {
@@ -205,7 +214,7 @@ class SimulationEngine {
         },
       });
 
-      // Update individual meters
+      // 6. Update individual meters
       for (const meterId of Object.keys(meterEarningsUpdate)) {
         const update = meterEarningsUpdate[meterId];
         const m = dbMeters.find((x) => x.id === meterId);
@@ -214,7 +223,7 @@ class SimulationEngine {
           if (update.partner && !currentPartners.includes(update.partner)) {
             currentPartners.push(update.partner);
           }
-          await tx.meter.update({
+          await prisma.meter.update({
             where: { id: meterId },
             data: {
               earned: { increment: update.earned },
@@ -224,10 +233,10 @@ class SimulationEngine {
         }
       }
 
-      // Log meter readings
-      for (const m of simulatedMeters) {
-        await tx.meterReading.create({
-          data: {
+      // 7. Batch insert meter readings (1 fast query)
+      if (simulatedMeters.length > 0) {
+        await prisma.meterReading.createMany({
+          data: simulatedMeters.map((m) => ({
             tick,
             meterId: m.id,
             generation: m.generation,
@@ -237,15 +246,15 @@ class SimulationEngine {
             voltage: m.voltage,
             current: m.current,
             powerFactor: m.powerFactor,
-          },
+          })),
         });
       }
 
-      // Log trades
-      for (const t of trades) {
-        await tx.trade.create({
-          data: {
-            id: `${t.id}-${tick}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      // 8. Batch insert trades (1 fast query)
+      if (trades.length > 0) {
+        await prisma.trade.createMany({
+          data: trades.map((t) => ({
+            id: `${t.id}-${tick}-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
             tick,
             buyer: t.buyer,
             seller: t.seller,
@@ -260,13 +269,15 @@ class SimulationEngine {
             buyerPayment: t.buyerPayment,
             sellerRevenue: t.sellerRevenue,
             networkRevenue: t.networkRevenue,
-          },
+          })),
         });
       }
-    });
 
-    // Broadcast updated state
-    await this.broadcastState();
+      // 9. Broadcast updated state to all connected WebSocket clients
+      await this.broadcastState();
+    } catch (error) {
+      console.error('Error running simulation step:', error);
+    }
   }
 
   public async reset() {

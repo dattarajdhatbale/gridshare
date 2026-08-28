@@ -71,11 +71,15 @@ async function main() {
   console.log('Database seeding finished successfully.');
 }
 
-main()
-  .catch((e) => {
+async function run() {
+  try {
+    await main();
+  } catch (e) {
     console.error('Error during database seed:', e);
     process.exit(1);
-  })
-  .finally(async () => {
+  } finally {
     await prisma.$disconnect();
-  });
+  }
+}
+
+run();

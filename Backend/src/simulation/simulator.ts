@@ -1,14 +1,14 @@
 import { Meter as DbMeter } from '@prisma/client';
-import { Meter, Role } from './model';
+import { Meter, Role, PFIT, PGRID } from './model';
 
 function hash(x: number): number {
   const s = Math.sin(x) * 10000;
   return s - Math.floor(s);
 }
 
-export function lmpFor(supply: number, demand: number, PFIT = 4.00, PGRID = 7.00): number {
-  if (supply === 0 && demand === 0) return 5.50;
-  return Math.max(PFIT, Math.min(PGRID, (supply * PFIT + demand * PGRID) / (supply + demand)));
+export function lmpFor(supply: number, demand: number, pFit = PFIT, pGrid = PGRID): number {
+  if (supply === 0 && demand === 0) return (pFit + pGrid) / 2;
+  return Math.max(pFit, Math.min(pGrid, (supply * pFit + demand * pGrid) / (supply + demand)));
 }
 
 export function simulateMetersForTick(tick: number, dbMeters: DbMeter[]): Meter[] {

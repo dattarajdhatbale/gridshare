@@ -326,9 +326,10 @@ main {
 }
 
 .hero {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 24px;
+  align-items: stretch;
   margin-bottom: 36px;
 }
 
@@ -1296,11 +1297,9 @@ footer span {
   }
 
   .hero {
-    display: block;
-  }
-
-  .hero-actions {
-    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
   }
 
   .ticker {
@@ -1383,14 +1382,22 @@ footer span {
   border: 1px solid var(--card-border);
   box-shadow: var(--card-shadow);
   border-radius: 16px;
-  padding: 16px 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-width: 520px;
+  min-width: 320px;
+  max-width: 100%;
 }
 
 .stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-header-left {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1413,16 +1420,52 @@ footer span {
   color: var(--text-secondary);
 }
 
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  color: var(--lime);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font: 700 10px var(--font-sans);
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+:root[data-theme="dark"] .live-badge {
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.18);
+  color: #00ff88;
+}
+
+.live-dot-small {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--lime);
+}
+
+:root[data-theme="dark"] .live-dot-small {
+  background-color: #00ff88;
+}
+
 .stat-body {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 16px 24px;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.stat-item.text-right {
+  align-items: flex-end;
+  justify-content: flex-start;
 }
 
 .stat-item label {
@@ -1436,14 +1479,52 @@ footer span {
   color: var(--text-primary);
 }
 
-.stat-footer {
-  border-top: 1px solid var(--line);
-  padding-top: 8px;
+.peak-time-val {
+  font-style: normal;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-left: 2px;
 }
 
-.updated-time {
-  font: 11px var(--font-mono);
+.update-status-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 500 11px var(--font-mono);
   color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.stat-value-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.stat-item.text-right .stat-value-block {
+  align-items: flex-end;
+}
+
+.stat-icon {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.load-icon {
+  color: var(--orange);
+}
+
+.gen-icon,
+.peak-icon {
+  color: var(--lime);
+}
+
+.avg-icon {
+  color: var(--text-secondary);
 }
 
 /* Active Trade Flow Animation */

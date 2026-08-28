@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { CloudSun, Play, Pause } from 'lucide-react';
+import { Play, Pause, RotateCcw, Zap, Sun, TrendingUp, Gauge } from 'lucide-react';
 import { Header, TopologyGraph, SimulationControls, MeterRoleCard, DemandSupplyCurve } from './components';
 import { Meter, Trade, seedMeters } from './simulation/model';
 import './styles.css';
@@ -21,7 +21,7 @@ export default function App() {
     const [selected, setSelected] = useState<Meter>(seedMeters[0]);
     const [info, setInfo] = useState(false);
     const [pulse, setPulse] = useState(false);
-    
+
     // States driven by backend
     const [meters, setMeters] = useState<Meter[]>(seedMeters);
     const [trades, setTrades] = useState<Trade[]>([]);
@@ -112,6 +112,48 @@ export default function App() {
     }, [meters]);
 
     const liveSelected = meters.find(m => m.id === selected.id) || meters[0];
+
+    const stats = useMemo(() => {
+        if (!liveSelected || liveSelected.role === 'consumer') {
+            return { peakKW: 0, peakTime: '—', avgKW: 0 };
+        }
+        const i = meters.findIndex(m => m.id === liveSelected.id);
+        if (i === -1) return { peakKW: 0, peakTime: '—', avgKW: 0 };
+
+        let totalGen = 0;
+        let maxGen = 0;
+        let maxTick = 0;
+
+        const hash = (x: number) => {
+            const s = Math.sin(x) * 10000;
+            return s - Math.floor(s);
+        };
+
+        for (let t = 0; t < 96; t++) {
+            const hour = (9 + t / 4) % 24;
+            const daylight = Math.max(0, Math.min(1, Math.sin(((hour - 6) / 12) * Math.PI)));
+            const r1 = hash(t * 13 + i * 37);
+            const cloud = 0.72 + r1 * 0.33;
+            const genKW = liveSelected.pv * daylight * cloud;
+            totalGen += genKW;
+            if (genKW > maxGen) {
+                maxGen = genKW;
+                maxTick = t;
+            }
+        }
+
+        const avgKW = totalGen / 96;
+        const peakHourVal = (9 + maxTick / 4) % 24;
+        const hourPart = Math.floor(peakHourVal);
+        const minPart = Math.floor((peakHourVal % 1) * 60);
+        const timeString = `${hourPart.toString().padStart(2, '0')}:${minPart.toString().padStart(2, '0')}`;
+
+        return {
+            peakKW: maxGen,
+            peakTime: timeString,
+            avgKW: avgKW,
+        };
+    }, [liveSelected, meters]);
     const supply = meters.reduce((sum, m) => sum + m.generation, 0);
     const demand = meters.reduce((sum, m) => sum + m.load, 0);
 
@@ -192,35 +234,62 @@ export default function App() {
                 <section className="hero">
                     <div className="hero-stat-card">
                         <div className="stat-header">
-                            <span className="stat-dot green" />
-                            <span className="stat-title">SELECTED SMART METER</span>
+                            <div className="stat-header-left">
+                                <span className="stat-dot green" />
+                                <span className="stat-title">SELECTED SMART METER</span>
+                            </div>
+                            <span className="live-badge">
+                                <span className="live-dot-small" /> LIVE
+                            </span>
                         </div>
                         <div className="stat-body">
+                            {/* Row 1: Meter ID and Relative Updated indicator */}
                             <div className="stat-item">
                                 <label>METER ID</label>
                                 <span className="stat-val">{liveSelected.id}</span>
                             </div>
+                            <div className="stat-item text-right">
+                                <span className="update-status-inline">
+                                    <RotateCcw size={11} /> Updated {secondsSinceUpdate}s ago
+                                </span>
+                            </div>
+
+                            {/* Row 2: Net Current Load and Peak Generation */}
                             <div className="stat-item">
                                 <label>NET CURRENT LOAD</label>
-                                <span className="stat-val">{liveSelected.load.toFixed(2)} kW</span>
+                                <div className="stat-value-block">
+                                    <Zap size={16} className="stat-icon load-icon" />
+                                    <span className="stat-val">{liveSelected.load.toFixed(2)} kW</span>
+                                </div>
                             </div>
+                            <div className="stat-item text-right">
+                                <label>PEAK GENERATION</label>
+                                <div className="stat-value-block">
+                                    <TrendingUp size={16} className="stat-icon peak-icon" />
+                                    <span className="stat-val">
+                                        {stats.peakKW.toFixed(2)} kW <i className="peak-time-val">@ {stats.peakTime}</i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Row 3: Net Current Generation and Average Generation */}
                             <div className="stat-item">
                                 <label>NET CURRENT GENERATION</label>
-                                <span className="stat-val">{liveSelected.generation.toFixed(2)} kW</span>
+                                <div className="stat-value-block">
+                                    <Sun size={16} className="stat-icon gen-icon" />
+                                    <span className="stat-val">{liveSelected.generation.toFixed(2)} kW</span>
+                                </div>
+                            </div>
+                            <div className="stat-item text-right">
+                                <label>AVG GENERATION</label>
+                                <div className="stat-value-block">
+                                    <Gauge size={16} className="stat-icon avg-icon" />
+                                    <span className="stat-val">{stats.avgKW.toFixed(2)} kW</span>
+                                </div>
                             </div>
                         </div>
-                        <div className="stat-footer">
-                            <span className="updated-time">
-                                Updated {secondsSinceUpdate}s ago (updated every 15 minutes)
-                            </span>
-                        </div>
                     </div>
-                    <div className="hero-actions">
-                        <button className="outline" onClick={() => handleSetTick(30)}><CloudSun size={16} />Simulate cloud cover</button>
-                        <button className="primary" onClick={() => handleSetPlaying(!playing)}>
-                            {playing ? <Pause size={16} /> : <Play size={16} />} {playing ? 'Pause demo' : 'Resume demo'}
-                        </button>
-                    </div>
+                    <DemandSupplyCurve supply={supply} demand={demand} history={supplyDemandHistory} />
                 </section>
 
                 <div className="ticker">
@@ -252,16 +321,13 @@ export default function App() {
                     </div>
                 </div>
 
-                <div className="grid bottom" style={{ gridTemplateColumns: '1.2fr 0.8fr', gap: '24px' }}>
-                    <TopologyGraph
-                        meters={meters}
-                        selected={liveSelected}
-                        onSelect={setSelected}
-                        sharedPartners={sharedPartners[liveSelected.id] || []}
-                        activePartners={activePartners}
-                    />
-                    <DemandSupplyCurve supply={supply} demand={demand} history={supplyDemandHistory} />
-                </div>
+                <TopologyGraph
+                    meters={meters}
+                    selected={liveSelected}
+                    onSelect={setSelected}
+                    sharedPartners={sharedPartners[liveSelected.id] || []}
+                    activePartners={activePartners}
+                />
 
                 <MeterRoleCard
                     meter={liveSelected}

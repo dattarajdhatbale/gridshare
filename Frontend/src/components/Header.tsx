@@ -8,6 +8,13 @@ interface HeaderProps {
 }
 
 export function Header({ onInfo, theme, onToggleTheme }: HeaderProps) {
+  const today = new Date();
+  const dayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+  const dayNum = today.getDate();
+  const monthName = today.toLocaleDateString('en-US', { month: 'long' });
+  const yearNum = today.getFullYear();
+  const formattedDate = `${dayName}, ${dayNum} ${monthName} ${yearNum}`;
+
   return (
     <header>
       <div className="header-left">
@@ -22,8 +29,7 @@ export function Header({ onInfo, theme, onToggleTheme }: HeaderProps) {
       </div>
 
       <div className="sim">
-        <span className="live-dot" /> SIMULATION LIVE <i /> <b>Tuesday, 14 May 2024</b>
-        <span className="clock">LIVE</span>
+        <span className="live-dot" /> SIMULATION LIVE <i /> <b>{formattedDate}</b>
       </div>
 
       <div className="header-actions-group">

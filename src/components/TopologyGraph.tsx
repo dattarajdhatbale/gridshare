@@ -4,9 +4,17 @@ interface TopologyGraphProps {
   meters: Meter[];
   selected: Meter;
   onSelect: (m: Meter) => void;
+  sharedPartners?: string[]; // IDs of partners shared with throughout the day
+  activePartners?: string[]; // IDs of partners actively trading right now
 }
 
-export function TopologyGraph({ meters, selected, onSelect }: TopologyGraphProps) {
+export function TopologyGraph({
+  meters,
+  selected,
+  onSelect,
+  sharedPartners = [],
+  activePartners = [],
+}: TopologyGraphProps) {
   const pts = [
     [70, 75],
     [180, 125],
@@ -37,6 +45,8 @@ export function TopologyGraph({ meters, selected, onSelect }: TopologyGraphProps
     [5, 6],
   ];
 
+  const selectedIdx = meters.findIndex((m) => m.id === selected.id);
+
   return (
     <section className="card topology">
       <div className="card-head">
@@ -46,14 +56,17 @@ export function TopologyGraph({ meters, selected, onSelect }: TopologyGraphProps
             12 active meters <span className="pill blue">LIVE NETWORK</span>
           </h2>
         </div>
-        <span className="muted small">
-          <span className="live-dot" /> 4 trading now
-        </span>
+        {activePartners.length > 0 && (
+          <span className="pill green" style={{ fontSize: '11px', padding: '4px 10px' }}>
+            <span className="live-dot" /> {activePartners.length} active trade{activePartners.length > 1 ? 's' : ''}
+          </span>
+        )}
       </div>
 
       <div className="network">
         <svg viewBox="0 0 620 310">
           <g className="edges">
+            {/* Render base structural connections */}
             {connections.map(([a, b], i) => (
               <line
                 key={i}
@@ -61,10 +74,54 @@ export function TopologyGraph({ meters, selected, onSelect }: TopologyGraphProps
                 y1={pts[a][1]}
                 x2={pts[b][0]}
                 y2={pts[b][1]}
-                className={i < 4 ? 'trade-edge' : ''}
+                stroke="var(--edge-inactive)"
+                strokeWidth="1.5"
+                opacity="0.3"
               />
             ))}
           </g>
+
+          {/* Render Historical Shared Partners throughout the day (dashed green lines) */}
+          <g className="shared-history-edges">
+            {selectedIdx !== -1 &&
+              sharedPartners.map((partnerId) => {
+                const partnerIdx = meters.findIndex((m) => m.id === partnerId);
+                if (partnerIdx === -1 || partnerIdx === selectedIdx) return null;
+                return (
+                  <line
+                    key={partnerId}
+                    x1={pts[selectedIdx][0]}
+                    y1={pts[selectedIdx][1]}
+                    x2={pts[partnerIdx][0]}
+                    y2={pts[partnerIdx][1]}
+                    stroke="rgba(0, 255, 136, 0.45)"
+                    strokeWidth="2.5"
+                    strokeDasharray="4 4"
+                  />
+                );
+              })}
+          </g>
+
+          {/* Render Active Trade Edges (animated glowing paths) */}
+          <g className="active-trade-edges">
+            {selectedIdx !== -1 &&
+              activePartners.map((partnerId) => {
+                const partnerIdx = meters.findIndex((m) => m.id === partnerId);
+                if (partnerIdx === -1 || partnerIdx === selectedIdx) return null;
+                return (
+                  <line
+                    key={partnerId}
+                    x1={pts[selectedIdx][0]}
+                    y1={pts[selectedIdx][1]}
+                    x2={pts[partnerIdx][0]}
+                    y2={pts[partnerIdx][1]}
+                    className="active-trade-line"
+                  />
+                );
+              })}
+          </g>
+
+          {/* Render microgrid nodes */}
           {meters.map((m, i) => (
             <g
               key={m.id}
@@ -83,11 +140,35 @@ export function TopologyGraph({ meters, selected, onSelect }: TopologyGraphProps
             </g>
           ))}
         </svg>
+
         <div className="network-legend">
           <span><span className="node-key solar" /> Producer</span>
           <span><span className="node-key prosumer" /> Prosumer</span>
           <span><span className="node-key consumer" /> Consumer</span>
-          <span><span className="edge-key" /> Active trade</span>
+          <span>
+            <span
+              style={{
+                display: 'inline-block',
+                width: '16px',
+                borderTop: '2.5px dashed rgba(0, 255, 136, 0.65)',
+                marginRight: '6px',
+                verticalAlign: 'middle',
+              }}
+            />
+            Shared Today
+          </span>
+          <span>
+            <span
+              style={{
+                display: 'inline-block',
+                width: '16px',
+                borderTop: '3.5px dashed var(--lime)',
+                marginRight: '6px',
+                verticalAlign: 'middle',
+              }}
+            />
+            Active Transfer
+          </span>
         </div>
       </div>
     </section>

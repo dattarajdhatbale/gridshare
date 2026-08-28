@@ -35,66 +35,37 @@ export function DemandSupplyCurve({ supply, demand, history }: DemandSupplyCurve
     supply > demand + 1.0
       ? 'Slightly higher supply'
       : demand > supply + 1.0
-      ? 'Slightly higher demand'
-      : 'Balanced Market';
+        ? 'Slightly higher demand'
+        : 'Balanced Market';
 
   return (
-    <section className="card ds-curve-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div className="card-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <section className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[20px] p-6 shadow-[var(--card-shadow)] backdrop-blur-md relative overflow-hidden transition-all duration-300 flex flex-col gap-4">
+      <div className="flex justify-between items-center">
         <div>
-          <label>COMMUNITY METRICS</label>
-          <h2>Demand & Supply Curve</h2>
+          <label className="font-mono text-[10px] font-medium tracking-[0.12em] text-[var(--text-secondary)] uppercase">COMMUNITY METRICS</label>
+          <h2 className="font-semibold text-[20px] font-title mt-1.5 mb-0 mx-0 tracking-[-0.02em] text-[var(--text-primary)]">Demand & Supply Curve</h2>
         </div>
-        <TrendingUp size={22} className="lime" />
+        <TrendingUp size={22} className="text-lime" />
       </div>
 
-      <div style={{ display: 'flex', gap: '20px', fontSize: '13px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span
-            className="dot solar-dot"
-            style={{
-              display: 'inline-block',
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--lime)',
-            }}
-          />
+      <div className="flex gap-5 text-[13px]">
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-2 h-2 rounded-full bg-lime" />
           <strong>{supply.toFixed(1)} kW</strong>
-          <span style={{ color: 'var(--text-muted)' }}>Supply</span>
+          <span className="text-[var(--text-muted)]">Supply</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span
-            className="dot load-dot"
-            style={{
-              display: 'inline-block',
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--orange)',
-            }}
-          />
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-2 h-2 rounded-full bg-orange" />
           <strong>{demand.toFixed(1)} kW</strong>
-          <span style={{ color: 'var(--text-muted)' }}>Demand</span>
+          <span className="text-[var(--text-muted)]">Demand</span>
         </div>
       </div>
 
-      <div
-        className="ds-curve-chart"
-        style={{
-          position: 'relative',
-          height: `${height}px`,
-          background: 'var(--mint)',
-          borderRadius: '10px',
-          overflow: 'hidden',
-          border: '1px solid var(--card-border)',
-          padding: '4px',
-        }}
-      >
+      <div className="relative h-[180px] bg-mint rounded-[10px] overflow-hidden border border-[var(--card-border)] p-1">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="none"
-          style={{ width: '100%', height: '100%', display: 'block' }}
+          className="w-full h-full block"
         >
           {/* Areas */}
           <path d={supplyArea} fill="rgba(0, 255, 136, 0.06)" />
@@ -105,20 +76,7 @@ export function DemandSupplyCurve({ supply, demand, history }: DemandSupplyCurve
           <path d={demandPath} fill="none" stroke="var(--orange)" strokeWidth="2.5" />
         </svg>
 
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '8px',
-            right: '12px',
-            fontSize: '11px',
-            fontFamily: 'var(--font-mono)',
-            color: 'var(--text-muted)',
-            background: 'var(--card-bg)',
-            padding: '3px 8px',
-            borderRadius: '6px',
-            border: '1px solid var(--card-border)',
-          }}
-        >
+        <div className="absolute bottom-2 right-3 text-[11px] font-mono text-[var(--text-muted)] bg-[var(--card-bg)] px-2 py-0.5 rounded-[6px] border border-[var(--card-border)]">
           {balanceStatus}
         </div>
       </div>

@@ -48,22 +48,22 @@ export function TopologyGraph({
   const selectedIdx = meters.findIndex((m) => m.id === selected.id);
 
   return (
-    <section className="card topology">
-      <div className="card-head">
+    <section className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[20px] p-6 shadow-[var(--card-shadow)] backdrop-blur-md relative overflow-hidden transition-all duration-300 topology">
+      <div className="flex justify-between items-start mb-4">
         <div>
-          <label>COMMUNITY TOPOLOGY</label>
-          <h2>
-            12 active meters <span className="pill blue">LIVE NETWORK</span>
+          <label className="font-mono text-[10px] font-medium tracking-[0.12em] text-[var(--text-secondary)] uppercase">COMMUNITY TOPOLOGY</label>
+          <h2 className="font-semibold text-[20px] font-title mt-1.5 mb-0 mx-0 tracking-[-0.02em] text-[var(--text-primary)]">
+            12 active meters <span className="font-mono text-[9px] font-semibold rounded-[20px] py-1 px-2 align-middle ml-1.5 tracking-[0.06em] uppercase bg-[rgba(81,150,200,0.12)] text-[#3b82f6] border border-[rgba(81,150,200,0.15)]">LIVE NETWORK</span>
           </h2>
         </div>
         {activePartners.length > 0 && (
-          <span className="pill green" style={{ fontSize: '11px', padding: '4px 10px' }}>
-            <span className="live-dot" /> {activePartners.length} active trade{activePartners.length > 1 ? 's' : ''}
+          <span className="font-mono text-[9px] font-semibold rounded-[20px] align-middle ml-1.5 tracking-[0.06em] uppercase bg-[rgba(16,185,129,0.12)] text-lime border border-[rgba(16,185,129,0.15)]" style={{ fontSize: '11px', padding: '4px 10px' }}>
+            <span className="inline-block w-2 h-2 bg-[#10b981] rounded-full shadow-[0_0_0_4px_var(--lime-glow)] animate-pulse" /> {activePartners.length} active trade{activePartners.length > 1 ? 's' : ''}
           </span>
         )}
       </div>
 
-      <div className="network">
+      <div className="mt-[14px] network">
         <svg viewBox="0 0 620 310">
           <g className="edges">
             {/* Render base structural connections */}
@@ -141,7 +141,7 @@ export function TopologyGraph({
           ))}
         </svg>
 
-        <div className="network-legend">
+        <div className="flex gap-4 flex-wrap font-mono text-[11px] text-[var(--text-secondary)] mt-3 mx-0.5 mb-0">
           <span><span className="node-key solar" /> Producer</span>
           <span><span className="node-key prosumer" /> Prosumer</span>
           <span><span className="node-key consumer" /> Consumer</span>

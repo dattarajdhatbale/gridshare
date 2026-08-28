@@ -2,14 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.optimizeTrades = optimizeTrades;
 const model_1 = require("./model");
+const simulator_1 = require("./simulator");
 function lineLossFraction(distance) {
-    return Math.max(0, Math.min(0.18, (distance / 100) * 0.018));
+    return Math.max(0, Math.min(0.18, (distance / 1000) * 0.015));
 }
 function networkCharge(distance) {
     return 0.18 + 0.00055 * distance;
 }
 function optimizeTrades(meters) {
-    const baseEnergyPrice = 4.00 + 0.5 * (7.00 - 4.00); // alpha = 0.50 -> ₹5.50
+    const S = meters.reduce((a, x) => a + x.exportKWh, 0);
+    const D = meters.reduce((a, x) => a + x.importKWh, 0);
+    const baseEnergyPrice = (0, simulator_1.lmpFor)(S, D, model_1.PFIT, model_1.PGRID);
     const sellers = meters
         .filter((x) => x.exportKWh > 1e-6)
         .map((x) => ({ id: x.id, name: x.name, supply: x.exportKWh, distance: x.distance }));

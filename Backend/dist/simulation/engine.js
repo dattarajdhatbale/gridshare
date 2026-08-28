@@ -7,6 +7,7 @@ exports.engine = void 0;
 const prismaClient_1 = __importDefault(require("../db/prismaClient"));
 const simulator_1 = require("./simulator");
 const matching_1 = require("./matching");
+const model_1 = require("./model");
 const ws_1 = require("ws");
 class SimulationEngine {
     intervalId = null;
@@ -104,11 +105,11 @@ class SimulationEngine {
         let tickBaseline = 0;
         const meterEarningsUpdate = {};
         trades.forEach((t) => {
-            tickBaseline += t.kwh * 4.00;
+            tickBaseline += t.kwh * model_1.PFIT;
             const seller = simulatedMeters.find((m) => m.name === t.seller || m.id === t.seller);
             const buyer = simulatedMeters.find((m) => m.name === t.buyer || m.id === t.buyer);
             if (seller) {
-                const gain = t.sent * (t.energyPrice - 4.00);
+                const gain = t.sent * (t.energyPrice - model_1.PFIT);
                 if (!meterEarningsUpdate[seller.id]) {
                     meterEarningsUpdate[seller.id] = { earned: 0, partner: '' };
                 }
@@ -118,7 +119,7 @@ class SimulationEngine {
                 }
             }
             if (buyer) {
-                const saving = t.delivered * (7.00 - t.buyerUnitPrice);
+                const saving = t.delivered * (model_1.PGRID - t.buyerUnitPrice);
                 if (!meterEarningsUpdate[buyer.id]) {
                     meterEarningsUpdate[buyer.id] = { earned: 0, partner: '' };
                 }

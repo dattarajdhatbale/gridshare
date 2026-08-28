@@ -1,7 +1,8 @@
-import { Meter, Trade, PGRID } from './model';
+import { Meter, Trade, PGRID, PFIT } from './model';
+import { lmpFor } from './simulator';
 
 function lineLossFraction(distance: number): number {
-  return Math.max(0, Math.min(0.18, (distance / 100) * 0.018));
+  return Math.max(0, Math.min(0.18, (distance / 1000) * 0.015));
 }
 
 function networkCharge(distance: number): number {
@@ -9,7 +10,9 @@ function networkCharge(distance: number): number {
 }
 
 export function optimizeTrades(meters: Meter[]): Trade[] {
-  const baseEnergyPrice = 4.00 + 0.5 * (7.00 - 4.00); // alpha = 0.50 -> ₹5.50
+  const S = meters.reduce((a, x) => a + x.exportKWh, 0);
+  const D = meters.reduce((a, x) => a + x.importKWh, 0);
+  const baseEnergyPrice = lmpFor(S, D, PFIT, PGRID);
 
   const sellers = meters
     .filter((x) => x.exportKWh > 1e-6)

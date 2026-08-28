@@ -1,7 +1,7 @@
 import prisma from '../db/prismaClient';
 import { simulateMetersForTick, lmpFor } from './simulator';
 import { optimizeTrades } from './matching';
-import { Meter, Trade } from './model';
+import { Meter, Trade, PFIT, PGRID } from './model';
 import { WebSocket } from 'ws';
 
 class SimulationEngine {
@@ -116,13 +116,13 @@ class SimulationEngine {
     const meterEarningsUpdate: Record<string, { earned: number; partner: string }> = {};
 
     trades.forEach((t) => {
-      tickBaseline += t.kwh * 4.00;
+      tickBaseline += t.kwh * PFIT;
 
       const seller = simulatedMeters.find((m) => m.name === t.seller || m.id === t.seller);
       const buyer = simulatedMeters.find((m) => m.name === t.buyer || m.id === t.buyer);
 
       if (seller) {
-        const gain = t.sent * (t.energyPrice - 4.00);
+        const gain = t.sent * (t.energyPrice - PFIT);
         if (!meterEarningsUpdate[seller.id]) {
           meterEarningsUpdate[seller.id] = { earned: 0, partner: '' };
         }
@@ -133,7 +133,7 @@ class SimulationEngine {
       }
 
       if (buyer) {
-        const saving = t.delivered * (7.00 - t.buyerUnitPrice);
+        const saving = t.delivered * (PGRID - t.buyerUnitPrice);
         if (!meterEarningsUpdate[buyer.id]) {
           meterEarningsUpdate[buyer.id] = { earned: 0, partner: '' };
         }

@@ -16,6 +16,13 @@ const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+// Health check endpoints
+app.get('/', (req, res) => {
+    res.json({ status: 'ok', service: 'GridShare Backend' });
+});
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+});
 // API routing
 app.use('/api/simulation', api_1.default);
 // Create HTTP server

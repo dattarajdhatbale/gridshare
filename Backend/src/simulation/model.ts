@@ -47,5 +47,5 @@ export interface Order {
   price: number;
 }
 
-export const PFIT = 4.00; // seller export utility rate (₹4/kWh)
+export const PFIT = 3.00; // seller export utility rate (₹3/kWh)
 export const PGRID = 7.00; // buyer import grid rate (₹7/kWh)

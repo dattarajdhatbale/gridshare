@@ -2,14 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lmpFor = lmpFor;
 exports.simulateMetersForTick = simulateMetersForTick;
+const model_1 = require("./model");
 function hash(x) {
     const s = Math.sin(x) * 10000;
     return s - Math.floor(s);
 }
-function lmpFor(supply, demand, PFIT = 4.00, PGRID = 7.00) {
+function lmpFor(supply, demand, pFit = model_1.PFIT, pGrid = model_1.PGRID) {
     if (supply === 0 && demand === 0)
-        return 5.50;
-    return Math.max(PFIT, Math.min(PGRID, (supply * PFIT + demand * PGRID) / (supply + demand)));
+        return (pFit + pGrid) / 2;
+    return Math.max(pFit, Math.min(pGrid, (supply * pFit + demand * pGrid) / (supply + demand)));
 }
 function simulateMetersForTick(tick, dbMeters) {
     const hour = (9 + tick / 4) % 24;

@@ -48,7 +48,7 @@ export function TopologyGraph({
   const selectedIdx = meters.findIndex((m) => m.id === selected.id);
 
   return (
-    <section className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[20px] p-6 shadow-[var(--card-shadow)] backdrop-blur-md relative overflow-hidden transition-all duration-300 topology">
+    <section className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[20px] p-6 shadow-[var(--card-shadow)] backdrop-blur-md relative overflow-hidden transition-all duration-300 topology h-full flex flex-col justify-between">
       <div className="flex justify-between items-start mb-4">
         <div>
           <label className="font-mono text-[10px] font-medium tracking-[0.12em] text-[var(--text-secondary)] uppercase">COMMUNITY TOPOLOGY</label>

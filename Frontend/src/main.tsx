@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Play, Pause, RotateCcw, Zap, Sun, TrendingUp, Gauge } from 'lucide-react';
-import { Header, TopologyGraph, SimulationControls, MeterRoleCard, DemandSupplyCurve } from './components';
+import { Header, TopologyGraph, SimulationControls, MeterRoleCard, DemandSupplyCurve, EnergyWalletCard } from './components';
 import { Meter, Trade, seedMeters } from './simulation/model';
 import './styles.css';
 
@@ -230,8 +230,14 @@ export default function App() {
 
     return (
         <div className="min-h-screen flex flex-col">
-            <Header onInfo={() => setInfo(true)} theme={theme} onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} />
-            <main className="max-w-[1260px] w-full mx-auto my-0 py-10 px-[4.5vw] pb-[30px] flex-1">
+            <Header
+                onInfo={() => setInfo(true)}
+                theme={theme}
+                onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+                selectedMeter={liveSelected}
+                lifetimeSavings={1248.50 + (ledger[liveSelected.id] || 0)}
+            />
+            <main className="max-w-[1260px] w-full mx-auto my-0 py-10 px-2 sm:px-4 pb-[30px] flex-1">
                 <section className="grid grid-cols-[1fr_2fr] gap-6 items-stretch mb-9 max-[850px]:flex max-[850px]:flex-col max-[850px]:gap-5">
                     <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[16px] p-6 shadow-[var(--card-shadow)] flex flex-col gap-3 min-w-[320px] max-w-full">
                         <div className="flex justify-between items-center gap-2">
@@ -322,13 +328,23 @@ export default function App() {
                     </div>
                 </div>
 
-                <TopologyGraph
-                    meters={meters}
-                    selected={liveSelected}
-                    onSelect={setSelected}
-                    sharedPartners={sharedPartners[liveSelected.id] || []}
-                    activePartners={activePartners}
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch mb-6">
+                    <TopologyGraph
+                        meters={meters}
+                        selected={liveSelected}
+                        onSelect={setSelected}
+                        sharedPartners={sharedPartners[liveSelected.id] || []}
+                        activePartners={activePartners}
+                    />
+                    <EnergyWalletCard
+                        meter={liveSelected}
+                        meters={meters}
+                        trades={trades}
+                        ledger={ledger}
+                        lmp={lmp}
+                        cumulativeBaseline={cumulativeBaseline}
+                    />
+                </div>
 
                 <MeterRoleCard
                     meter={liveSelected}

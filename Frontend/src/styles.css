@@ -11,8 +11,8 @@
 
   /* Theme colors - Light Mode 1 */
   --bg-color: #f2f7f5;
-  --bg-gradient: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 65%);
-  --grid-line: rgba(16, 185, 129, 0.04);
+  --bg-gradient: radial-gradient(ellipse 120% 90% at 50% -10%, rgba(16, 185, 129, 0.16) 0%, rgba(232, 251, 243, 0.65) 50%, #f2f7f5 100%);
+  --grid-line: transparent;
 
   --card-bg: rgba(255, 255, 255, 0.78);
   --card-border: transparent;
@@ -32,8 +32,8 @@
   --orange: #f59e0b;
   --red: #ef4444;
 
-  --header-bg: rgba(255, 255, 255, 0.75);
-  --header-border: rgba(16, 185, 129, 0.08);
+  --header-bg: #ffffff;
+  --header-border: rgba(16, 185, 129, 0.12);
 
   --button-primary-bg: #10b981;
   --button-primary-hover: #059669;
@@ -56,8 +56,8 @@
 
 :root[data-theme="dark"] {
   --bg-color: #040c0a;
-  --bg-gradient: radial-gradient(circle at 50% 0%, rgba(0, 255, 136, 0.09) 0%, transparent 65%);
-  --grid-line: rgba(0, 255, 136, 0.03);
+  --bg-gradient: radial-gradient(ellipse 120% 90% at 50% -10%, rgba(0, 255, 136, 0.16) 0%, rgba(12, 38, 30, 0.7) 50%, #040c0a 100%);
+  --grid-line: transparent;
 
   --card-bg: rgba(10, 24, 21, 0.65);
   --card-border: transparent;
@@ -77,8 +77,8 @@
   --orange: #ff9f43;
   --red: #ff5252;
 
-  --header-bg: rgba(6, 17, 14, 0.8);
-  --header-border: rgba(0, 255, 136, 0.1);
+  --header-bg: #040c0a;
+  --header-border: rgba(0, 255, 136, 0.12);
 
   --button-primary-bg: #00ff88;
   --button-primary-hover: #00e676;
@@ -102,21 +102,45 @@
 /* Global Styles */
 * {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
 }
 
 body {
   margin: 0;
   background-color: var(--bg-color);
-  background-image:
-    var(--bg-gradient),
-    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-  background-size: 100% 100%, 24px 24px, 24px 24px;
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   transition: background-color 0.4s ease;
+}
+
+/* Custom Styled Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.35);
+  border-radius: 9999px;
+  border: 2px solid var(--bg-color);
+  transition: background 0.2s ease;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 136, 0.35);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--lime);
 }
 
 /* Topology Graph Drawing Styling */

@@ -6,3 +6,4 @@ export * from './OrderBook';
 export * from './MeterRoleCard';
 export * from './SimulationControls';
 export * from './DemandSupplyCurve';
+export * from './EnergyWalletCard';

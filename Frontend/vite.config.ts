@@ -7,12 +7,15 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://gridshare.onrender.com',
         changeOrigin: true,
+        secure: false,
       },
       '/ws': {
-        target: 'ws://localhost:5000',
+        target: 'wss://gridshare.onrender.com',
         ws: true,
+        changeOrigin: true,
+        secure: false,
       },
     },
   },

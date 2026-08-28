@@ -5,6 +5,9 @@ import { Header, TopologyGraph, SimulationControls, MeterRoleCard, DemandSupplyC
 import { Meter, Trade, seedMeters } from './simulation/model';
 import './styles.css';
 
+const API_BASE_URL = 'https://gridshare.onrender.com';
+const WS_BASE_URL = 'wss://gridshare.onrender.com/ws';
+
 export default function App() {
     const [theme, setTheme] = useState<'dark' | 'light'>(() => {
         return (localStorage.getItem('gridshare-theme') as 'dark' | 'light') || 'dark';
@@ -49,7 +52,7 @@ export default function App() {
     // WebSocket / REST API sync connection
     useEffect(() => {
         // Fetch initial state first
-        fetch('/api/simulation/state')
+        fetch(`${API_BASE_URL}/api/simulation/state`)
             .then(res => res.json())
             .then(data => {
                 if (data.tick !== undefined) {
@@ -65,10 +68,8 @@ export default function App() {
             })
             .catch(err => console.error("Failed to load initial simulation state:", err));
 
-        // Connect WebSocket (using relative path proxied by Vite config)
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws`;
-        const ws = new WebSocket(wsUrl);
+        // Connect WebSocket to remote Render backend
+        const ws = new WebSocket(WS_BASE_URL);
 
         ws.onmessage = (event) => {
             try {
@@ -95,7 +96,7 @@ export default function App() {
 
     // Load supply-demand historical curve entries from backend
     useEffect(() => {
-        fetch('/api/simulation/history')
+        fetch(`${API_BASE_URL}/api/simulation/history`)
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
@@ -197,7 +198,7 @@ export default function App() {
     // Control Handlers communicating to server APIs
     const handleSetPlaying = (val: boolean | ((p: boolean) => boolean)) => {
         const nextVal = typeof val === 'function' ? val(playing) : val;
-        fetch('/api/simulation/control', {
+        fetch(`${API_BASE_URL}/api/simulation/control`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ playing: nextVal })
@@ -206,7 +207,7 @@ export default function App() {
 
     const handleSetSpeed = (val: string | ((s: string) => string)) => {
         const nextVal = typeof val === 'function' ? val(speed) : val;
-        fetch('/api/simulation/control', {
+        fetch(`${API_BASE_URL}/api/simulation/control`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ speed: nextVal })
@@ -215,7 +216,7 @@ export default function App() {
 
     const handleSetTick = (val: number | ((t: number) => number)) => {
         const nextVal = typeof val === 'function' ? val(tick) : val;
-        fetch('/api/simulation/tick', {
+        fetch(`${API_BASE_URL}/api/simulation/tick`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ tick: nextVal })
@@ -223,7 +224,7 @@ export default function App() {
     };
 
     const handleReset = () => {
-        fetch('/api/simulation/reset', { method: 'POST' })
+        fetch(`${API_BASE_URL}/api/simulation/reset`, { method: 'POST' })
             .catch(err => console.error("Failed to reset simulation:", err));
     };
 

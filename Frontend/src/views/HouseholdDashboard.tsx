@@ -196,6 +196,8 @@ export function HouseholdDashboard({
         onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
         selectedMeter={liveMyMeter}
         lifetimeSavings={1248.50 + myEarned}
+        trades={trades}
+        sharedPartners={sharedPartners[liveMyMeter.id] || []}
       />
       <main className="w-full px-4 sm:px-6 my-0 py-3 pb-3 flex-1">
         

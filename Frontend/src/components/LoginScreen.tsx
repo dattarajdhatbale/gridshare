@@ -233,7 +233,7 @@ export function LoginScreen({ theme, onToggleTheme }: LoginScreenProps) {
                   <span className="text-[11.5px] text-[var(--text-secondary)]">Selected Household</span>
                 </div>
                 <span className={`text-[10px] font-bold font-mono tracking-[0.05em] uppercase border py-0.5 px-2 rounded-full capitalize ${selectRoleColor(selectedMeter.role)}`}>
-                  {selectedMeter.role}
+                  {selectedMeter.role === 'solar' ? 'seller' : selectedMeter.role}
                 </span>
               </div>
 
@@ -320,7 +320,7 @@ export function LoginScreen({ theme, onToggleTheme }: LoginScreenProps) {
                         <span className="font-mono text-[10px] text-[var(--text-secondary)] uppercase">{m.id}</span>
                       </div>
                       <span className={`text-[8.5px] font-bold font-mono tracking-[0.05em] uppercase border py-0.5 px-1.5 rounded-full capitalize flex-shrink-0 ${selectRoleColor(m.role)}`}>
-                        {m.role}
+                        {m.role === 'solar' ? 'seller' : m.role}
                       </span>
                     </div>
                   ))}

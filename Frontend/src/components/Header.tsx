@@ -11,6 +11,8 @@ interface HeaderProps {
   onToggleTheme: () => void;
   selectedMeter?: Meter;
   lifetimeSavings?: number;
+  trades?: any[];
+  sharedPartners?: string[];
 }
 
 export function Header({
@@ -19,8 +21,16 @@ export function Header({
   onToggleTheme,
   selectedMeter,
   lifetimeSavings = 1248.50,
+  trades = [],
+  sharedPartners = [],
 }: HeaderProps) {
   const { role, meter, setMeter, logout } = useSession();
+
+  const userName = role === 'operator' 
+    ? 'Grid Operator' 
+    : (meter?.displayName || meter?.name || selectedMeter?.name || 'Resident');
+  const meterId = role === 'operator' ? 'SYSTEM' : (meter?.id || selectedMeter?.id || 'M-XX');
+  const roleName = role === 'operator' ? 'operator' : (meter?.role || selectedMeter?.role || 'household');
   
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -29,6 +39,10 @@ export function Header({
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(false);
+  const notifiedPartnersRef = useRef<Set<string>>(new Set());
 
   // Renaming states
   const [isRenaming, setIsRenaming] = useState(false);
@@ -64,6 +78,31 @@ export function Header({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Detect trading with new partners in this session
+  useEffect(() => {
+    if (role !== 'household' || !trades || !meterId) return;
+
+    trades.forEach((trade) => {
+      const isSeller = trade.seller === meterId;
+      const partnerId = isSeller ? trade.buyer : trade.seller;
+
+      if (!notifiedPartnersRef.current.has(partnerId)) {
+        notifiedPartnersRef.current.add(partnerId);
+
+        const newNotif = {
+          id: `${trade.id}-${Date.now()}`,
+          partnerId,
+          amt: trade.delivered.toFixed(2),
+          type: isSeller ? 'sell' : 'buy',
+          timestamp: new Date(),
+        };
+
+        setNotifications((prev) => [newNotif, ...prev]);
+        setUnreadNotifications(true);
+      }
+    });
+  }, [trades, role, meterId]);
+
   // Sync renaming input when profile changes or opens
   useEffect(() => {
     if (showProfile) {
@@ -98,11 +137,7 @@ export function Header({
     }
   };
 
-  const userName = role === 'operator' 
-    ? 'Grid Operator' 
-    : (meter?.displayName || meter?.name || selectedMeter?.name || 'Resident');
-  const meterId = role === 'operator' ? 'SYSTEM' : (meter?.id || selectedMeter?.id || 'M-XX');
-  const roleName = role === 'operator' ? 'operator' : (meter?.role || selectedMeter?.role || 'household');
+  // Helper functions
 
   const fetchTradesHistory = async () => {
     setLoadingHistory(true);
@@ -364,12 +399,16 @@ export function Header({
             onClick={() => {
               setShowNotifications(prev => !prev);
               setShowProfile(false);
+              setShowHistory(false);
+              setUnreadNotifications(false);
             }}
             title="Notifications"
             aria-label="Notifications"
           >
             <Bell size={18} />
-            <span className="absolute top-[9px] right-[9px] w-[6.2px] h-[6.2px] bg-[var(--red)] rounded-full shadow-[0_0_6px_var(--red)]" />
+            {unreadNotifications && (
+              <span className="absolute top-[9px] right-[9px] w-[6.2px] h-[6.2px] bg-[var(--red)] rounded-full shadow-[0_0_6px_var(--red)] animate-pulse" />
+            )}
           </button>
 
           {showNotifications && (
@@ -384,17 +423,40 @@ export function Header({
                 </span>
               </div>
 
-              <div className="py-7 px-3 flex flex-col items-center justify-center text-center">
-                <div className="w-13 h-13 rounded-full bg-[rgba(45,45,45,0.06)] dark:bg-[rgba(215,201,174,0.08)] text-[var(--text-primary)] dark:text-[#D7C9AE] flex items-center justify-center mb-3.5 shadow-inner">
-                  <BellOff size={24} />
+              {notifications.length === 0 ? (
+                <div className="py-7 px-3 flex flex-col items-center justify-center text-center">
+                  <div className="w-13 h-13 rounded-full bg-[rgba(45,45,45,0.06)] dark:bg-[rgba(215,201,174,0.08)] text-[var(--text-primary)] dark:text-[#D7C9AE] flex items-center justify-center mb-3.5 shadow-inner">
+                    <BellOff size={24} />
+                  </div>
+                  <h4 className="font-semibold font-title text-[16px] text-[var(--text-primary)] m-0 mb-1 leading-tight">
+                    No notifications
+                  </h4>
+                  <p className="text-[12.5px] text-[var(--text-secondary)] m-0 leading-relaxed max-w-[230px]">
+                    You're all caught up with energy trading updates.
+                  </p>
                 </div>
-                <h4 className="font-semibold font-title text-[16px] text-[var(--text-primary)] m-0 mb-1 leading-tight">
-                  No notifications
-                </h4>
-                <p className="text-[12.5px] text-[var(--text-secondary)] m-0 leading-relaxed max-w-[230px]">
-                  You're all caught up with energy trading updates.
-                </p>
-              </div>
+              ) : (
+                <div className="my-4 max-h-[220px] overflow-y-auto pr-1 flex flex-col gap-2.5 custom-scrollbar">
+                  {notifications.map((notif) => (
+                    <div key={notif.id} className="flex gap-2.5 items-start p-2.5 rounded-[12px] bg-[rgba(45,45,45,0.02)] dark:bg-[rgba(215,201,174,0.03)] border border-[var(--line)] text-[12px]">
+                      <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${
+                        notif.type === 'sell' ? 'bg-[#E5C378]' : 'bg-[#C06B22]'
+                      }`} />
+                      <div className="flex-1 flex flex-col gap-0.5">
+                        <span className="text-[var(--text-primary)] font-medium leading-tight">
+                          {notif.type === 'sell' 
+                            ? `Energy shared to [${notif.partnerId}]`
+                            : `Energy drawn from [${notif.partnerId}]`
+                          }
+                        </span>
+                        <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                          {notif.amt} kWh · {notif.timestamp.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="pt-3 border-t border-[var(--line)] flex justify-center items-center">
                 <span className="font-mono text-[10px] text-[var(--text-muted)] flex items-center gap-1.5">

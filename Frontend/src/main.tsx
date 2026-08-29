@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { API_BASE_URL, WS_BASE_URL } from './config';
 import { SessionProvider, useSession } from './auth/SessionContext';
 import { authFetch } from './auth/api';
-import { LoginScreen } from './components';
+import { LoginScreen, LoadingScreen } from './components';
 import { OperatorDashboard } from './views/OperatorDashboard';
 import { HouseholdDashboard } from './views/HouseholdDashboard';
 import { Meter, Trade, seedMeters } from './simulation/model';
@@ -20,6 +20,8 @@ function DashboardContainer() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('gridshare-theme', theme);
   }, [theme]);
+
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(true);
 
   const [tick, setTick] = useState(62);
   const [playing, setPlaying] = useState(true);
@@ -156,68 +158,62 @@ function DashboardContainer() {
   };
 
   // Render Loader spinner to avoid flashing login on refresh
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[var(--bg-color)] flex flex-col items-center justify-center font-sans">
-        <div className="flex flex-col items-center gap-3">
-          <span className="w-8 h-8 border-3 border-t-transparent border-[var(--text-primary)] rounded-full animate-spin" />
-          <span className="text-[12px] font-mono tracking-widest uppercase text-[var(--text-secondary)]">
-            Restoring Grid session...
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  // Render Login screen if not authenticated
-  if (!token) {
-    return <LoginScreen theme={theme} onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))} />;
-  }
-
+  // Render Loading Screen overlay if active, overlaying the main app view underneath when resolved
   return (
     <>
-      {role === 'operator' ? (
-        <OperatorDashboard
-          theme={theme}
-          setTheme={setTheme}
-          setInfo={setInfo}
-          tick={tick}
-          playing={playing}
-          speed={speed}
-          meters={meters}
-          trades={trades}
-          ledger={ledger}
-          sharedPartners={sharedPartners}
-          cumulativeBaseline={cumulativeBaseline}
-          secondsSinceUpdate={secondsSinceUpdate}
-          supplyDemandHistory={supplyDemandHistory}
-          selected={selected}
-          setSelected={setSelected}
-          handleSetPlaying={handleSetPlaying}
-          handleSetSpeed={handleSetSpeed}
-          handleSetTick={handleSetTick}
-          handleReset={handleReset}
+      {showLoadingOverlay && (
+        <LoadingScreen
+          isFinished={!loading}
+          onFadeOutComplete={() => setShowLoadingOverlay(false)}
         />
-      ) : (
-        <HouseholdDashboard
-          theme={theme}
-          setTheme={setTheme}
-          setInfo={setInfo}
-          tick={tick}
-          playing={playing}
-          speed={speed}
-          meters={meters}
-          trades={trades}
-          ledger={ledger}
-          sharedPartners={sharedPartners}
-          cumulativeBaseline={cumulativeBaseline}
-          secondsSinceUpdate={secondsSinceUpdate}
-          supplyDemandHistory={supplyDemandHistory}
-          handleSetPlaying={handleSetPlaying}
-          handleSetSpeed={handleSetSpeed}
-          handleSetTick={handleSetTick}
-          handleReset={handleReset}
-        />
+      )}
+
+      {!loading && (
+        !token ? (
+          <LoginScreen theme={theme} onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))} />
+        ) : role === 'operator' ? (
+          <OperatorDashboard
+            theme={theme}
+            setTheme={setTheme}
+            setInfo={setInfo}
+            tick={tick}
+            playing={playing}
+            speed={speed}
+            meters={meters}
+            trades={trades}
+            ledger={ledger}
+            sharedPartners={sharedPartners}
+            cumulativeBaseline={cumulativeBaseline}
+            secondsSinceUpdate={secondsSinceUpdate}
+            supplyDemandHistory={supplyDemandHistory}
+            selected={selected}
+            setSelected={setSelected}
+            handleSetPlaying={handleSetPlaying}
+            handleSetSpeed={handleSetSpeed}
+            handleSetTick={handleSetTick}
+            handleReset={handleReset}
+          />
+        ) : (
+          <HouseholdDashboard
+            theme={theme}
+            setTheme={setTheme}
+            setInfo={setInfo}
+            tick={tick}
+            playing={playing}
+            speed={speed}
+            meters={meters}
+            trades={trades}
+            ledger={ledger}
+            sharedPartners={sharedPartners}
+            cumulativeBaseline={cumulativeBaseline}
+            secondsSinceUpdate={secondsSinceUpdate}
+            supplyDemandHistory={supplyDemandHistory}
+            handleSetPlaying={handleSetPlaying}
+            handleSetSpeed={handleSetSpeed}
+            handleSetTick={handleSetTick}
+            handleReset={handleReset}
+          />
+        )
       )}
 
       {/* Global Info Modal Dialog */}

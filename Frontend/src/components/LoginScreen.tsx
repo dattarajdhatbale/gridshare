@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSession } from '../auth/SessionContext';
 import { API_BASE_URL } from '../config';
 import { Sun, Moon, Key, User, ShieldAlert, Sparkles } from 'lucide-react';
@@ -34,26 +34,52 @@ export function LoginScreen({ theme, onToggleTheme }: LoginScreenProps) {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
 
-  const fetchMeters = async () => {
-    setLoadingMeters(true);
-    setMetersError(null);
+  const isFetchingRef = useRef(false);
+
+  const fetchMeters = async (retryCount = 0) => {
+    if (isFetchingRef.current && retryCount === 0) return;
+    isFetchingRef.current = true;
+
+    if (retryCount === 0) {
+      setLoadingMeters(true);
+      setMetersError(null);
+    }
+
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/meters`);
       if (!res.ok) throw new Error('Failed to load meters');
       const data = await res.json();
-      setMeters(data);
+      if (Array.isArray(data) && data.length > 0) {
+        setMeters(data);
+        setLoadingMeters(false);
+        setMetersError(null);
+        isFetchingRef.current = false;
+      } else {
+        throw new Error('Empty or invalid meters response');
+      }
     } catch (err) {
-      console.error('Error loading meters list:', err);
-      setMetersError('Could not load neighborhood meters. Please check connection.');
-    } finally {
-      setLoadingMeters(false);
+      console.warn(`Error loading meters list (attempt ${retryCount + 1}):`, err);
+      
+      if (retryCount < 10) {
+        // Wait 1.5 seconds and retry silently
+        setTimeout(() => {
+          fetchMeters(retryCount + 1);
+        }, 1500);
+      } else {
+        // All retries failed, show error message
+        setMetersError('Could not load neighborhood meters. Please check connection.');
+        setLoadingMeters(false);
+        isFetchingRef.current = false;
+      }
     }
   };
 
-  // Fetch meters list on mount
+  // Fetch meters list on mount or if HMR resets state
   useEffect(() => {
-    fetchMeters();
-  }, []);
+    if (loadingMeters && meters.length === 0 && !isFetchingRef.current) {
+      fetchMeters();
+    }
+  }, [loadingMeters, meters.length]);
 
   // Track submission timer for cold start check (3 seconds threshold)
   useEffect(() => {
@@ -107,14 +133,14 @@ export function LoginScreen({ theme, onToggleTheme }: LoginScreenProps) {
       case 'prosumer':
         return 'bg-[rgba(192,107,34,0.12)] text-[#C06B22] border-[rgba(192,107,34,0.22)]';
       case 'consumer':
-        default:
+      default:
         return 'bg-[rgba(90,84,74,0.12)] text-[#847B6D] border-[rgba(90,84,74,0.22)]';
     }
   };
 
   return (
     <div className="min-h-screen bg-[var(--bg-color)] bg-[var(--bg-gradient)] text-[var(--text-primary)] flex flex-col items-center justify-center p-4 transition-all duration-300 font-sans">
-      
+
       {/* Top Header Controls */}
       <div className="absolute top-6 right-6 flex items-center gap-3">
         <button
@@ -128,7 +154,7 @@ export function LoginScreen({ theme, onToggleTheme }: LoginScreenProps) {
 
       {/* Main Login Card */}
       <div className="w-full max-w-[500px] bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[24px] p-8 shadow-[var(--card-shadow)] backdrop-blur-md relative overflow-hidden transition-all duration-300 flex flex-col">
-        
+
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-7">
           <img src={logo} alt="GridShare Logo" className="h-10 w-auto mb-3" style={{ filter: 'brightness(1)' }} />
@@ -156,11 +182,10 @@ export function LoginScreen({ theme, onToggleTheme }: LoginScreenProps) {
                 setActiveTab('household');
                 setLoginError(null);
               }}
-              className={`flex-1 py-2 px-4 rounded-full font-title font-semibold text-[14px] cursor-pointer transition-all duration-200 ${
-                activeTab === 'household'
+              className={`flex-1 py-2 px-4 rounded-full font-title font-semibold text-[14px] cursor-pointer transition-all duration-200 ${activeTab === 'household'
                   ? 'bg-[#2D2D2D] text-[#E5C378] dark:bg-[#232323] dark:text-[#E5C378] shadow-sm'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-              }`}
+                }`}
             >
               Household Resident
             </button>
@@ -169,11 +194,10 @@ export function LoginScreen({ theme, onToggleTheme }: LoginScreenProps) {
                 setActiveTab('operator');
                 setLoginError(null);
               }}
-              className={`flex-1 py-2 px-4 rounded-full font-title font-semibold text-[14px] cursor-pointer transition-all duration-200 ${
-                activeTab === 'operator'
+              className={`flex-1 py-2 px-4 rounded-full font-title font-semibold text-[14px] cursor-pointer transition-all duration-200 ${activeTab === 'operator'
                   ? 'bg-[#2D2D2D] text-[#E5C378] dark:bg-[#232323] dark:text-[#E5C378] shadow-sm'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-              }`}
+                }`}
             >
               Grid Operator
             </button>
@@ -274,7 +298,7 @@ export function LoginScreen({ theme, onToggleTheme }: LoginScreenProps) {
                   <div className="text-red-500 text-[13px]">{metersError}</div>
                   <button
                     type="button"
-                    onClick={fetchMeters}
+                    onClick={() => fetchMeters()}
                     className="px-4 py-1.5 rounded-full border border-[var(--card-border)] bg-[rgba(45,45,45,0.04)] dark:bg-[rgba(215,201,174,0.04)] text-[12px] text-[var(--text-primary)] hover:scale-105 active:scale-95 transition-all cursor-pointer font-title font-semibold"
                   >
                     Retry Connection

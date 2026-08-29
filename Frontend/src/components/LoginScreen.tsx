@@ -34,21 +34,24 @@ export function LoginScreen({ theme, onToggleTheme }: LoginScreenProps) {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
 
+  const fetchMeters = async () => {
+    setLoadingMeters(true);
+    setMetersError(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/meters`);
+      if (!res.ok) throw new Error('Failed to load meters');
+      const data = await res.json();
+      setMeters(data);
+    } catch (err) {
+      console.error('Error loading meters list:', err);
+      setMetersError('Could not load neighborhood meters. Please check connection.');
+    } finally {
+      setLoadingMeters(false);
+    }
+  };
+
   // Fetch meters list on mount
   useEffect(() => {
-    async function fetchMeters() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/meters`);
-        if (!res.ok) throw new Error('Failed to load meters');
-        const data = await res.json();
-        setMeters(data);
-      } catch (err) {
-        console.error('Error loading meters list:', err);
-        setMetersError('Could not load neighborhood meters. Please check connection.');
-      } finally {
-        setLoadingMeters(false);
-      }
-    }
     fetchMeters();
   }, []);
 
@@ -267,7 +270,16 @@ export function LoginScreen({ theme, onToggleTheme }: LoginScreenProps) {
                   <span>Loading grid meters...</span>
                 </div>
               ) : metersError ? (
-                <div className="py-8 text-center text-red-500 text-[13px]">{metersError}</div>
+                <div className="py-8 text-center flex flex-col items-center gap-3">
+                  <div className="text-red-500 text-[13px]">{metersError}</div>
+                  <button
+                    type="button"
+                    onClick={fetchMeters}
+                    className="px-4 py-1.5 rounded-full border border-[var(--card-border)] bg-[rgba(45,45,45,0.04)] dark:bg-[rgba(215,201,174,0.04)] text-[12px] text-[var(--text-primary)] hover:scale-105 active:scale-95 transition-all cursor-pointer font-title font-semibold"
+                  >
+                    Retry Connection
+                  </button>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[300px] overflow-y-auto pr-1">
                   {meters.map((m) => (

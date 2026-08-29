@@ -64,17 +64,17 @@ export function Header({
             }
           }}
         >
-          <div className="bg-transparent w-[34px] h-[34px] rounded-[10px] flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.08)] group-hover:scale-105 transition-transform">
-            <img src={logo} alt="gridshare logo" className="w-6 h-6 object-contain" />
+          <div className="bg-[#2D2D2D] w-[34px] h-[34px] rounded-[10px] flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.12)] group-hover:scale-105 transition-transform border border-[rgba(215,201,174,0.2)]">
+            <img src={logo} alt="gridshare logo" className="w-5 h-5 object-contain" />
           </div>
           <div>
-            <b className="block text-[20px] font-bold font-title tracking-[-0.03em] text-[var(--text-primary)] group-hover:text-lime transition-colors">gridshare</b>
+            <b className="block text-[20px] font-bold font-title tracking-[-0.03em] text-[var(--text-primary)] group-hover:opacity-80 transition-opacity">gridshare</b>
           </div>
         </div>
       </div>
 
       <div className="font-mono text-[11px] text-[var(--text-secondary)] flex gap-3 items-center max-[850px]:hidden">
-        <span className="inline-block w-2 h-2 bg-[#10b981] rounded-full shadow-[0_0_0_4px_var(--lime-glow)] animate-pulse" /> SIMULATION LIVE <i className="h-4 border-l border-[var(--line)]" /> <b className="text-[var(--text-primary)] font-semibold">{formattedDate}</b>
+        <span className="inline-block w-2 h-2 bg-[#2D2D2D] dark:bg-[#D7C9AE] rounded-full shadow-[0_0_0_4px_var(--lime-glow)] animate-pulse" /> SIMULATION LIVE <i className="h-4 border-l border-[var(--line)]" /> <b className="text-[var(--text-primary)] font-semibold">{formattedDate}</b>
       </div>
 
       <div className="flex items-center gap-[10px]">
@@ -100,7 +100,7 @@ export function Header({
         {/* Notification Bell Dropdown Container */}
         <div className="relative" ref={notifRef}>
           <button
-            className={`bg-[var(--button-outline-bg)] border ${showNotifications ? 'border-lime text-lime' : 'border-[var(--button-outline-border)] text-[var(--text-secondary)]'} w-[38px] h-[38px] rounded-full grid place-items-center cursor-pointer relative transition-all duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:border-lime hover:text-lime hover:bg-[var(--button-outline-hover)] hover:-translate-y-[1px]`}
+            className={`bg-[var(--button-outline-bg)] border ${showNotifications ? 'border-[var(--text-primary)] text-[var(--text-primary)]' : 'border-[var(--button-outline-border)] text-[var(--text-secondary)]'} w-[38px] h-[38px] rounded-full grid place-items-center cursor-pointer relative transition-all duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] hover:bg-[var(--button-outline-hover)] hover:-translate-y-[1px]`}
             onClick={() => {
               setShowNotifications(prev => !prev);
               setShowProfile(false);
@@ -113,20 +113,20 @@ export function Header({
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-3 w-[300px] sm:w-[340px] bg-white dark:bg-[#071915] border border-[rgba(16,185,129,0.25)] dark:border-[rgba(0,255,136,0.25)] rounded-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.38)] p-6 sm:p-6.5 z-[150] animate-[scaleUp_0.2s_cubic-bezier(0.16,1,0.3,1)]">
+            <div className="absolute right-0 mt-3 w-[300px] sm:w-[340px] border border-[var(--card-border)] rounded-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.38)] p-6 sm:p-6.5 z-[150] animate-[scaleUp_0.2s_cubic-bezier(0.16,1,0.3,1)]" style={{ backgroundColor: theme === 'light' ? '#FFFFFF' : '#282828' }}>
               <div className="flex justify-between items-center pb-3.5 border-b border-[var(--line)]">
                 <div className="flex items-center gap-2">
-                  <Bell size={16} className="text-lime" />
+                  <Bell size={16} className="text-[#C06B22] dark:text-[#E5C378]" />
                   <span className="font-semibold font-title text-[15px] text-[var(--text-primary)]">Notifications</span>
                 </div>
-                <span className="font-mono text-[9px] font-semibold uppercase py-0.5 px-2.5 rounded-full bg-[rgba(16,185,129,0.1)] text-lime border border-[rgba(16,185,129,0.2)]">
+                <span className="font-mono text-[9px] font-semibold uppercase py-0.5 px-2.5 rounded-full bg-[rgba(45,45,45,0.08)] text-[var(--text-primary)] dark:bg-[rgba(215,201,174,0.12)] dark:text-[#D7C9AE] border border-[var(--line)]">
                   Live Feed
                 </span>
               </div>
 
               <div className="py-7 px-3 flex flex-col items-center justify-center text-center">
-                <div className="w-13 h-13 rounded-full bg-[rgba(16,185,129,0.1)] dark:bg-[rgba(0,255,136,0.12)] text-lime flex items-center justify-center mb-3.5 shadow-inner">
-                  <BellOff size={24} className="text-lime" />
+                <div className="w-13 h-13 rounded-full bg-[rgba(45,45,45,0.06)] dark:bg-[rgba(215,201,174,0.08)] text-[var(--text-primary)] dark:text-[#D7C9AE] flex items-center justify-center mb-3.5 shadow-inner">
+                  <BellOff size={24} />
                 </div>
                 <h4 className="font-semibold font-title text-[16px] text-[var(--text-primary)] m-0 mb-1 leading-tight">
                   No notifications
@@ -138,7 +138,7 @@ export function Header({
 
               <div className="pt-3 border-t border-[var(--line)] flex justify-center items-center">
                 <span className="font-mono text-[10px] text-[var(--text-muted)] flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] dark:bg-[#00ff88]" /> P2P Network Connected
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-primary)] dark:bg-[#D7C9AE]" /> P2P Network Connected
                 </span>
               </div>
             </div>
@@ -156,25 +156,25 @@ export function Header({
             title="User Profile"
             aria-label="User Profile"
           >
-            <svg viewBox="0 0 32 32" width="32" height="32" className="w-full h-full rounded-full border-[1.5px] border-lime shadow-[0_0_10px_var(--lime-glow)] bg-[var(--mint)]">
+            <svg viewBox="0 0 32 32" width="32" height="32" className="w-full h-full rounded-full border-[1.5px] border-[#2D2D2D] dark:border-[#D7C9AE] shadow-[0_0_10px_var(--lime-glow)] bg-[var(--mint)]">
               <defs>
                 <linearGradient id="avatar-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#00ff88" />
-                  <stop offset="100%" stopColor="#00a86b" />
+                  <stop offset="0%" stopColor="#E5C378" />
+                  <stop offset="100%" stopColor="#C9A84C" />
                 </linearGradient>
               </defs>
               <circle cx="16" cy="16" r="16" fill="url(#avatar-grad)" />
-              <circle cx="16" cy="12" r="5" fill="#0c241f" />
-              <path d="M6 25 C6 20, 10 18, 16 18 C22 18, 26 20, 26 25" fill="#0c241f" />
+              <circle cx="16" cy="12" r="5" fill="#2D2D2D" />
+              <path d="M6 25 C6 20, 10 18, 16 18 C22 18, 26 20, 26 25" fill="#2D2D2D" />
             </svg>
-            <div className="absolute bottom-[1px] right-[1px] w-2 h-2 bg-[#00ff88] border-[1.5px] border-[var(--card-bg)] rounded-full shadow-[0_0_6px_#00ff88]" />
+            <div className="absolute bottom-[1px] right-[1px] w-2 h-2 bg-[#E5C378] border-[1.5px] border-[var(--card-bg)] rounded-full shadow-[0_0_6px_#E5C378]" />
           </button>
 
           {showProfile && (
-            <div className="absolute right-0 mt-3 w-[310px] sm:w-[350px] bg-white dark:bg-[#071915] border border-[rgba(16,185,129,0.25)] dark:border-[rgba(0,255,136,0.25)] rounded-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.38)] p-6 sm:p-6.5 z-[150] animate-[scaleUp_0.2s_cubic-bezier(0.16,1,0.3,1)]">
+            <div className="absolute right-0 mt-3 w-[310px] sm:w-[350px] border border-[var(--card-border)] rounded-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.38)] p-6 sm:p-6.5 z-[150] animate-[scaleUp_0.2s_cubic-bezier(0.16,1,0.3,1)]" style={{ backgroundColor: theme === 'light' ? '#FFFFFF' : '#282828' }}>
               {/* Profile Card Header */}
               <div className="flex items-center gap-3.5 pb-4 border-b border-[var(--line)]">
-                <div className="w-12 h-12 rounded-full border-[1.5px] border-lime bg-[#e8fbf3] dark:bg-[rgba(0,255,136,0.12)] flex items-center justify-center text-lime shadow-sm flex-shrink-0">
+                <div className="w-12 h-12 rounded-full border-[1.5px] border-[#2D2D2D] dark:border-[#D7C9AE] bg-[#E5C378] text-[#2D2D2D] flex items-center justify-center shadow-sm flex-shrink-0 font-bold">
                   <User size={22} />
                 </div>
                 <div className="overflow-hidden flex flex-col justify-center">
@@ -182,10 +182,10 @@ export function Header({
                     <h3 className="font-bold font-title text-[17px] text-[var(--text-primary)] m-0 truncate leading-tight">
                       {userName}
                     </h3>
-                    <ShieldCheck size={16} className="text-lime flex-shrink-0" />
+                    <ShieldCheck size={16} className="text-[#C06B22] dark:text-[#E5C378] flex-shrink-0" />
                   </div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="font-mono text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-[rgba(81,150,200,0.12)] text-[#3b82f6] border border-[rgba(81,150,200,0.15)] leading-none">
+                    <span className="font-mono text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-[rgba(45,45,45,0.08)] dark:bg-[rgba(215,201,174,0.15)] text-[var(--text-primary)] border border-[var(--line)] leading-none">
                       {meterId}
                     </span>
                     <span className="font-mono text-[11px] text-[var(--text-secondary)] capitalize leading-none">
@@ -196,16 +196,16 @@ export function Header({
               </div>
 
               {/* Lifetime Savings vs Grid Card */}
-              <div className="my-4 p-4 bg-[#f0fdf4] dark:bg-[rgba(0,255,136,0.06)] border border-[rgba(16,185,129,0.18)] dark:border-[rgba(0,255,136,0.18)] rounded-[18px]">
+              <div className="my-4 p-4 bg-[#F5EFE6] dark:bg-[rgba(215,201,174,0.06)] border border-[var(--line)] rounded-[18px]">
                 <div className="flex justify-between items-center mb-1">
                   <label className="font-mono text-[9px] font-bold text-[var(--text-secondary)] tracking-[0.08em] uppercase flex items-center gap-1">
-                    <Sparkles size={11} className="text-lime" /> LIFETIME SAVINGS VS GRID
+                    <Sparkles size={11} className="text-[#C06B22] dark:text-[#E5C378]" /> LIFETIME SAVINGS VS GRID
                   </label>
-                  <span className="font-mono text-[10px] text-lime font-bold bg-[rgba(16,185,129,0.1)] dark:bg-[rgba(0,255,136,0.12)] px-1.5 py-0.5 rounded">
+                  <span className="font-mono text-[10px] text-[var(--text-primary)] font-bold bg-[rgba(45,45,45,0.08)] dark:bg-[rgba(215,201,174,0.15)] px-1.5 py-0.5 rounded">
                     +24.6%
                   </span>
                 </div>
-                <div className="text-[28px] font-bold font-title text-[#10b981] dark:text-[#00ff88] tracking-[-0.02em] leading-tight my-1">
+                <div className="text-[28px] font-bold font-title text-[var(--text-primary)] tracking-[-0.02em] leading-tight my-1">
                   ₹{lifetimeSavings.toFixed(2)}
                 </div>
                 <span className="text-[11.5px] text-[var(--text-secondary)] block leading-snug">
@@ -215,13 +215,13 @@ export function Header({
 
               {/* Account Quick Details */}
               <div className="grid grid-cols-2 gap-3 pt-1 text-[11px]">
-                <div className="bg-[rgba(16,185,129,0.04)] dark:bg-[rgba(0,255,136,0.04)] p-3 rounded-[14px] border border-[var(--line)] flex flex-col justify-center">
+                <div className="bg-[rgba(45,45,45,0.04)] dark:bg-[rgba(215,201,174,0.04)] p-3 rounded-[14px] border border-[var(--line)] flex flex-col justify-center">
                   <span className="text-[var(--text-muted)] block text-[9px] font-mono uppercase tracking-[0.05em] mb-0.5">GRID DEFAULT</span>
                   <strong className="text-[var(--text-primary)] font-semibold text-[13px]">₹7.00/kWh</strong>
                 </div>
-                <div className="bg-[rgba(16,185,129,0.04)] dark:bg-[rgba(0,255,136,0.04)] p-3 rounded-[14px] border border-[var(--line)] flex flex-col justify-center">
+                <div className="bg-[rgba(45,45,45,0.04)] dark:bg-[rgba(215,201,174,0.04)] p-3 rounded-[14px] border border-[var(--line)] flex flex-col justify-center">
                   <span className="text-[var(--text-muted)] block text-[9px] font-mono uppercase tracking-[0.05em] mb-0.5">STATUS</span>
-                  <strong className="text-lime font-semibold text-[13px] flex items-center gap-1.5">
+                  <strong className="text-[var(--text-primary)] font-semibold text-[13px] flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-lime animate-pulse" /> Active Node
                   </strong>
                 </div>
@@ -229,8 +229,6 @@ export function Header({
             </div>
           )}
         </div>
-
-
       </div>
     </header>
   );

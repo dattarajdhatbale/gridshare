@@ -57,8 +57,8 @@ export function TopologyGraph({
           </h2>
         </div>
         {activePartners.length > 0 && (
-          <span className="font-mono text-[9px] font-semibold rounded-[20px] align-middle ml-1.5 tracking-[0.06em] uppercase bg-[rgba(16,185,129,0.12)] text-lime border border-[rgba(16,185,129,0.15)]" style={{ fontSize: '11px', padding: '4px 10px' }}>
-            <span className="inline-block w-2 h-2 bg-[#10b981] rounded-full shadow-[0_0_0_4px_var(--lime-glow)] animate-pulse" /> {activePartners.length} active trade{activePartners.length > 1 ? 's' : ''}
+          <span className="font-mono text-[9px] font-semibold rounded-[20px] align-middle ml-1.5 tracking-[0.06em] uppercase bg-[rgba(45,45,45,0.08)] border border-[rgba(45,45,45,0.18)] dark:bg-[rgba(215,201,174,0.12)] dark:border-[rgba(215,201,174,0.22)] text-[var(--text-primary)] dark:text-[#D7C9AE]" style={{ fontSize: '11px', padding: '4px 10px' }}>
+            <span className="inline-block w-2 h-2 bg-[var(--text-primary)] dark:bg-[#D7C9AE] rounded-full shadow-[0_0_0_4px_var(--lime-glow)] animate-pulse" /> {activePartners.length} active trade{activePartners.length > 1 ? 's' : ''}
           </span>
         )}
       </div>
@@ -81,7 +81,7 @@ export function TopologyGraph({
             ))}
           </g>
 
-          {/* Render Historical Shared Partners throughout the day (dashed green lines) */}
+          {/* Render Historical Shared Partners throughout the day (dashed theme lines) */}
           <g className="shared-history-edges">
             {selectedIdx !== -1 &&
               sharedPartners.map((partnerId) => {
@@ -94,7 +94,7 @@ export function TopologyGraph({
                     y1={pts[selectedIdx][1]}
                     x2={pts[partnerIdx][0]}
                     y2={pts[partnerIdx][1]}
-                    stroke="rgba(0, 255, 136, 0.45)"
+                    stroke="rgba(229, 195, 120, 0.65)"
                     strokeWidth="2.5"
                     strokeDasharray="4 4"
                   />
@@ -150,7 +150,7 @@ export function TopologyGraph({
               style={{
                 display: 'inline-block',
                 width: '16px',
-                borderTop: '2.5px dashed rgba(0, 255, 136, 0.65)',
+                borderTop: '2.5px dashed rgba(229, 195, 120, 0.75)',
                 marginRight: '6px',
                 verticalAlign: 'middle',
               }}

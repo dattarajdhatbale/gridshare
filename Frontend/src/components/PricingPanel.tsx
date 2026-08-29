@@ -101,8 +101,8 @@ export function PricingPanel({ lmp, supply, demand, pulse, history }: PricingPan
             style={{ width: '100%', height: '100%' }}
           >
             {/* Areas */}
-            <path d={supplyArea} fill="rgba(0, 255, 136, 0.08)" />
-            <path d={demandArea} fill="rgba(255, 159, 67, 0.08)" />
+            <path d={supplyArea} fill="rgba(45, 45, 45, 0.08)" />
+            <path d={demandArea} fill="rgba(192, 107, 34, 0.08)" />
 
             {/* Lines */}
             <path d={supplyPath} fill="none" stroke="var(--lime)" strokeWidth="2" />

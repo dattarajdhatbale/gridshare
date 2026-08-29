@@ -2,101 +2,101 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design System & Themes */
+/* Design System & Themes: Mine Shaft (#2D2D2D) & Akaroa (#D7C9AE) */
 :root,
 :root[data-theme="light"] {
   --font-sans: 'Outfit', 'DM Sans', -apple-system, sans-serif;
   --font-title: 'Space Grotesk', 'Outfit', sans-serif;
   --font-mono: 'DM Mono', monospace;
 
-  /* Theme colors - Light Mode 1 */
-  --bg-color: #f2f7f5;
-  --bg-gradient: radial-gradient(ellipse 120% 90% at 50% -10%, rgba(16, 185, 129, 0.16) 0%, rgba(232, 251, 243, 0.65) 50%, #f2f7f5 100%);
+  /* Theme colors - Light Mode: Akaroa (#D7C9AE) & Mine Shaft (#2D2D2D) */
+  --bg-color: #D7C9AE;
+  --bg-gradient: radial-gradient(ellipse 120% 90% at 50% -10%, rgba(255, 255, 255, 0.45) 0%, rgba(215, 201, 174, 0.95) 50%, #D7C9AE 100%);
   --grid-line: transparent;
 
-  --card-bg: rgba(255, 255, 255, 0.78);
-  --card-border: transparent;
-  --card-shadow: 0 8px 30px rgba(0, 50, 30, 0.04), 0 0 1px rgba(16, 185, 129, 0.1);
-  --card-glow: rgba(16, 185, 129, 0.02);
+  --card-bg: rgba(255, 255, 255, 0.82);
+  --card-border: rgba(45, 45, 45, 0.14);
+  --card-shadow: 0 8px 30px rgba(45, 45, 45, 0.07), 0 0 1px rgba(45, 45, 45, 0.12);
+  --card-glow: rgba(45, 45, 45, 0.02);
 
-  --text-primary: #112a27;
-  --text-secondary: #5d7570;
-  --text-muted: #819894;
-  --ink: #112a27;
-  --muted: #5d7570;
-  --line: rgba(16, 185, 129, 0.08);
+  --text-primary: #2D2D2D;
+  --text-secondary: #5A544A;
+  --text-muted: #847B6D;
+  --ink: #2D2D2D;
+  --muted: #5A544A;
+  --line: rgba(45, 45, 45, 0.12);
 
-  --lime: #10b981;
-  --lime-glow: rgba(16, 185, 129, 0.25);
-  --mint: #e8fbf3;
-  --orange: #f59e0b;
-  --red: #ef4444;
+  --lime: #2D2D2D;
+  --lime-glow: rgba(45, 45, 45, 0.2);
+  --mint: #C9BA9D;
+  --orange: #C06B22;
+  --red: #C53030;
 
-  --header-bg: #ffffff;
-  --header-border: rgba(16, 185, 129, 0.12);
+  --header-bg: #D7C9AE;
+  --header-border: rgba(45, 45, 45, 0.15);
 
-  --button-primary-bg: #10b981;
-  --button-primary-hover: #059669;
-  --button-primary-text: #ffffff;
+  --button-primary-bg: #2D2D2D;
+  --button-primary-hover: #1A1A1A;
+  --button-primary-text: #D7C9AE;
 
-  --button-outline-bg: rgba(255, 255, 255, 0.9);
-  --button-outline-border: rgba(16, 185, 129, 0.18);
-  --button-outline-hover: rgba(16, 185, 129, 0.06);
+  --button-outline-bg: rgba(255, 255, 255, 0.75);
+  --button-outline-border: rgba(45, 45, 45, 0.22);
+  --button-outline-hover: rgba(45, 45, 45, 0.08);
 
-  --node-solar: #10b981;
-  --node-prosumer: #f59e0b;
-  --node-consumer: #6b7280;
-  --edge-active: #10b981;
-  --edge-inactive: #d1dbd6;
+  --node-solar: #2D2D2D;
+  --node-prosumer: #8C7B65;
+  --node-consumer: #BDB097;
+  --edge-active: #2D2D2D;
+  --edge-inactive: #C5B69B;
 
-  --chart-area: rgba(16, 185, 129, 0.06);
-  --chart-solar: #10b981;
-  --chart-load: #f59e0b;
+  --chart-area: rgba(45, 45, 45, 0.08);
+  --chart-solar: #2D2D2D;
+  --chart-load: #8C7B65;
 }
 
 :root[data-theme="dark"] {
-  --bg-color: #040c0a;
-  --bg-gradient: radial-gradient(ellipse 120% 90% at 50% -10%, rgba(0, 255, 136, 0.16) 0%, rgba(12, 38, 30, 0.7) 50%, #040c0a 100%);
+  --bg-color: #2D2D2D;
+  --bg-gradient: radial-gradient(ellipse 120% 90% at 50% -10%, rgba(215, 201, 174, 0.08) 0%, rgba(35, 35, 35, 0.95) 50%, #2D2D2D 100%);
   --grid-line: transparent;
 
-  --card-bg: rgba(10, 24, 21, 0.65);
-  --card-border: transparent;
-  --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 255, 136, 0.15);
-  --card-glow: rgba(0, 255, 136, 0.04);
+  --card-bg: rgba(40, 40, 40, 0.85);
+  --card-border: rgba(215, 201, 174, 0.16);
+  --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 1px rgba(215, 201, 174, 0.15);
+  --card-glow: rgba(215, 201, 174, 0.04);
 
-  --text-primary: #e2f1ec;
-  --text-secondary: #85a29c;
-  --text-muted: #57736e;
-  --ink: #e2f1ec;
-  --muted: #85a29c;
-  --line: rgba(0, 255, 136, 0.08);
+  --text-primary: #F5EFE6;
+  --text-secondary: #D7C9AE;
+  --text-muted: #A3967F;
+  --ink: #F5EFE6;
+  --muted: #D7C9AE;
+  --line: rgba(215, 201, 174, 0.14);
 
-  --lime: #00ff88;
-  --lime-glow: rgba(0, 255, 136, 0.3);
-  --mint: #0c201b;
-  --orange: #ff9f43;
-  --red: #ff5252;
+  --lime: #D7C9AE;
+  --lime-glow: rgba(215, 201, 174, 0.3);
+  --mint: rgba(55, 55, 55, 0.85);
+  --orange: #E09852;
+  --red: #E55353;
 
-  --header-bg: #040c0a;
-  --header-border: rgba(0, 255, 136, 0.12);
+  --header-bg: #232323;
+  --header-border: rgba(215, 201, 174, 0.15);
 
-  --button-primary-bg: #00ff88;
-  --button-primary-hover: #00e676;
-  --button-primary-text: #040c0a;
+  --button-primary-bg: #D7C9AE;
+  --button-primary-hover: #E2D7C0;
+  --button-primary-text: #2D2D2D;
 
-  --button-outline-bg: rgba(10, 24, 21, 0.45);
-  --button-outline-border: rgba(0, 255, 136, 0.2);
-  --button-outline-hover: rgba(0, 255, 136, 0.06);
+  --button-outline-bg: rgba(50, 50, 50, 0.6);
+  --button-outline-border: rgba(215, 201, 174, 0.25);
+  --button-outline-hover: rgba(215, 201, 174, 0.1);
 
-  --node-solar: #00ff88;
-  --node-prosumer: #ff9f43;
-  --node-consumer: #546e69;
-  --edge-active: #00ff88;
-  --edge-inactive: #1c332e;
+  --node-solar: #D7C9AE;
+  --node-prosumer: #E09852;
+  --node-consumer: #6E685F;
+  --edge-active: #D7C9AE;
+  --edge-inactive: #424242;
 
-  --chart-area: rgba(0, 255, 136, 0.05);
-  --chart-solar: #00ff88;
-  --chart-load: #ff9f43;
+  --chart-area: rgba(215, 201, 174, 0.08);
+  --chart-solar: #D7C9AE;
+  --chart-load: #E09852;
 }
 
 /* Global Styles */
@@ -129,14 +129,14 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.35);
+  background: rgba(45, 45, 45, 0.35);
   border-radius: 9999px;
   border: 2px solid var(--bg-color);
   transition: background 0.2s ease;
 }
 
 :root[data-theme="dark"] ::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 136, 0.35);
+  background: rgba(215, 201, 174, 0.35);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -257,10 +257,12 @@ body {
     transform: scale(0.95);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.15);
     opacity: 0.5;
   }
+
   100% {
     transform: scale(0.95);
     opacity: 1;
@@ -268,11 +270,14 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
     box-shadow: 0 0 0 0px var(--lime-glow);
   }
+
   50% {
     transform: scale(1.05);
     opacity: 0.9;
@@ -285,6 +290,7 @@ body {
     opacity: 0;
     transform: scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: scale(1);

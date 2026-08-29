@@ -45,17 +45,17 @@ export function DemandSupplyCurve({ supply, demand, history }: DemandSupplyCurve
           <label className="font-mono text-[10px] font-medium tracking-[0.12em] text-[var(--text-secondary)] uppercase">COMMUNITY METRICS</label>
           <h2 className="font-semibold text-[20px] font-title mt-1.5 mb-0 mx-0 tracking-[-0.02em] text-[var(--text-primary)]">Demand & Supply Curve</h2>
         </div>
-        <TrendingUp size={22} className="text-lime" />
+        <TrendingUp size={22} className="text-[#C06B22] dark:text-[#E5C378]" />
       </div>
 
       <div className="flex gap-5 text-[13px]">
         <div className="flex items-center gap-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-lime" />
+          <span className="inline-block w-2 h-2 rounded-full bg-[var(--text-primary)] dark:bg-[#D7C9AE]" />
           <strong>{supply.toFixed(1)} kW</strong>
           <span className="text-[var(--text-muted)]">Supply</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-orange" />
+          <span className="inline-block w-2 h-2 rounded-full bg-[#C06B22] dark:bg-[#E09852]" />
           <strong>{demand.toFixed(1)} kW</strong>
           <span className="text-[var(--text-muted)]">Demand</span>
         </div>
@@ -68,12 +68,12 @@ export function DemandSupplyCurve({ supply, demand, history }: DemandSupplyCurve
           className="w-full h-full block"
         >
           {/* Areas */}
-          <path d={supplyArea} fill="rgba(0, 255, 136, 0.06)" />
-          <path d={demandArea} fill="rgba(255, 159, 67, 0.06)" />
+          <path d={supplyArea} fill="rgba(45, 45, 45, 0.06)" className="dark:fill-[rgba(215,201,174,0.06)]" />
+          <path d={demandArea} fill="rgba(192, 107, 34, 0.06)" className="dark:fill-[rgba(224,152,82,0.06)]" />
 
           {/* Lines */}
-          <path d={supplyPath} fill="none" stroke="var(--lime)" strokeWidth="2.5" />
-          <path d={demandPath} fill="none" stroke="var(--orange)" strokeWidth="2.5" />
+          <path d={supplyPath} fill="none" stroke="currentColor" className="text-[var(--text-primary)] dark:text-[#D7C9AE]" strokeWidth="2.5" />
+          <path d={demandPath} fill="none" stroke="#C06B22" className="dark:stroke-[#E09852]" strokeWidth="2.5" />
         </svg>
 
         <div className="absolute bottom-2 right-3 text-[11px] font-mono text-[var(--text-muted)] bg-[var(--card-bg)] px-2 py-0.5 rounded-[6px] border border-[var(--card-border)]">

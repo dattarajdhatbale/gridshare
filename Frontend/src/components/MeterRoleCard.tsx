@@ -85,7 +85,7 @@ export function MeterRoleCard({
           <span className="block text-[var(--text-muted)]">
             {seller ? 'Current tick capital gain' : 'Current tick capital saving'}
           </span>
-          <b className="text-lime text-[14px] font-bold">
+          <b className="text-[#C06B22] dark:text-[#E5C378] text-[14px] font-bold">
             +₹{currentTickBenefit.toFixed(2)}
           </b>
         </div>
@@ -93,7 +93,7 @@ export function MeterRoleCard({
           <span className="block text-[var(--text-muted)]">
             {seller ? 'Total capital gain over standard grid export' : 'Total capital saving over standard grid import'}
           </span>
-          <b className="text-lime text-[14px] font-bold">
+          <b className="text-[#C06B22] dark:text-[#E5C378] text-[14px] font-bold">
             +₹{earned.toFixed(2)}
           </b>
         </div>

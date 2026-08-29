@@ -242,11 +242,11 @@ export default function App() {
                     <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[16px] p-6 shadow-[var(--card-shadow)] flex flex-col gap-3 min-w-[320px] max-w-full">
                         <div className="flex justify-between items-center gap-2">
                             <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-lime shadow-[0_0_8px_var(--lime-glow)]" />
+                                <span className="w-2 h-2 rounded-full bg-[var(--text-primary)] shadow-[0_0_8px_var(--lime-glow)]" />
                                 <span className="font-mono font-semibold text-[10px] tracking-[0.1em] text-[var(--text-secondary)]">SELECTED SMART METER</span>
                             </div>
-                            <span className="inline-flex items-center gap-1.5 bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.15)] text-lime py-1 px-2.5 rounded-full font-sans font-bold text-[10px] tracking-[0.05em] uppercase leading-none dark:bg-[rgba(0,255,136,0.08)] dark:border-[rgba(0,255,136,0.18)] dark:text-[#00ff88]">
-                                <span className="w-1.5 h-1.5 rounded-full bg-lime dark:bg-[#00ff88]" /> LIVE
+                            <span className="inline-flex items-center gap-1.5 bg-[rgba(45,45,45,0.08)] border border-[rgba(45,45,45,0.18)] text-[var(--text-primary)] py-1 px-2.5 rounded-full font-sans font-bold text-[10px] tracking-[0.05em] uppercase leading-none dark:bg-[rgba(215,201,174,0.12)] dark:border-[rgba(215,201,174,0.22)] dark:text-[#D7C9AE]">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-primary)] dark:bg-[#D7C9AE]" /> LIVE
                             </span>
                         </div>
                         <div className="grid grid-cols-[1fr_1.15fr] gap-x-6 gap-y-4">
@@ -265,14 +265,14 @@ export default function App() {
                             <div className="flex flex-col gap-1">
                                 <label className="font-mono text-[9px] font-medium text-[var(--text-muted)] tracking-[0.08em] uppercase">NET CURRENT LOAD</label>
                                 <div className="flex flex-col items-start gap-1.5 mt-1.5">
-                                    <Zap size={16} className="flex-shrink-0 opacity-85 text-orange" />
+                                    <Zap size={16} className="flex-shrink-0 opacity-85 text-[#C06B22] dark:text-[#E09852]" />
                                     <span className="font-semibold text-[20px] font-title text-[var(--text-primary)]">{liveSelected.load.toFixed(2)} kW</span>
                                 </div>
                             </div>
                             <div className="flex flex-col gap-1 items-end justify-start">
                                 <label className="font-mono text-[9px] font-medium text-[var(--text-muted)] tracking-[0.08em] uppercase">PEAK GENERATION</label>
                                 <div className="flex flex-col items-end gap-1.5 mt-1.5">
-                                    <TrendingUp size={16} className="flex-shrink-0 opacity-85 text-lime" />
+                                    <TrendingUp size={16} className="flex-shrink-0 opacity-85 text-[var(--text-primary)] dark:text-[#D7C9AE]" />
                                     <span className="font-semibold text-[20px] font-title text-[var(--text-primary)]">
                                         {stats.peakKW.toFixed(2)} kW <i className="not-italic text-[11px] font-mono text-[var(--text-muted)] font-medium ml-0.5">@ {stats.peakTime}</i>
                                     </span>
@@ -283,7 +283,7 @@ export default function App() {
                             <div className="flex flex-col gap-1">
                                 <label className="font-mono text-[9px] font-medium text-[var(--text-muted)] tracking-[0.08em] uppercase">NET CURRENT GENERATION</label>
                                 <div className="flex flex-col items-start gap-1.5 mt-1.5">
-                                    <Sun size={16} className="flex-shrink-0 opacity-85 text-lime" />
+                                    <Sun size={16} className="flex-shrink-0 opacity-85 text-[#C06B22] dark:text-[#E5C378]" />
                                     <span className="font-semibold text-[20px] font-title text-[var(--text-primary)]">{liveSelected.generation.toFixed(2)} kW</span>
                                 </div>
                             </div>
@@ -303,26 +303,26 @@ export default function App() {
                     <div className="p-5 px-6 border-r border-[var(--line)] flex flex-col justify-center max-[520px]:border-r-0 max-[520px]:border-b max-[520px]:border-[var(--line)]">
                         <small className="flex gap-1.5 items-center font-semibold text-[10px] font-mono text-[var(--text-secondary)] uppercase">LOCAL SUPPLY</small>
                         <strong className="block text-[28px] font-semibold font-title mt-1 mb-1 mx-0 text-[var(--text-primary)] tracking-[-0.02em]">{supply.toFixed(1)} <i className="font-mono font-medium text-[12px] text-[var(--text-secondary)] not-italic ml-1">kW</i></strong>
-                        <span className={supplyDelta === null ? 'font-mono text-[11px] flex gap-1 items-center font-medium text-[var(--text-secondary)]' : supplyDelta >= 0 ? 'font-mono text-[11px] flex gap-1 items-center font-medium text-[#10b981]' : 'font-mono text-[11px] flex gap-1 items-center font-medium text-[var(--orange)]'}>
+                        <span className={supplyDelta === null ? 'font-mono text-[11px] flex gap-1 items-center font-medium text-[var(--text-secondary)]' : supplyDelta >= 0 ? 'font-mono text-[11px] flex gap-1 items-center font-medium text-[var(--text-primary)] dark:text-[#D7C9AE]' : 'font-mono text-[11px] flex gap-1 items-center font-medium text-[#C06B22] dark:text-[#E09852]'}>
                             {supplyDelta === null ? '—' : `${supplyDelta >= 0 ? '↑' : '↓'} ${Math.abs(supplyDelta).toFixed(1)}%`}
                         </span>
                     </div>
                     <div className="p-5 px-6 border-r border-[var(--line)] flex flex-col justify-center max-[850px]:border-r-0 max-[520px]:border-b max-[520px]:border-[var(--line)]">
                         <small className="flex gap-1.5 items-center font-semibold text-[10px] font-mono text-[var(--text-secondary)] uppercase">LOCAL DEMAND</small>
                         <strong className="block text-[28px] font-semibold font-title mt-1 mb-1 mx-0 text-[var(--text-primary)] tracking-[-0.02em]">{demand.toFixed(1)} <i className="font-mono font-medium text-[12px] text-[var(--text-secondary)] not-italic ml-1">kW</i></strong>
-                        <span className={demandDelta === null ? 'font-mono text-[11px] flex gap-1 items-center font-medium text-[var(--text-secondary)]' : demandDelta >= 0 ? 'font-mono text-[11px] flex gap-1 items-center font-medium text-[#10b981]' : 'font-mono text-[11px] flex gap-1 items-center font-medium text-[var(--orange)]'}>
+                        <span className={demandDelta === null ? 'font-mono text-[11px] flex gap-1 items-center font-medium text-[var(--text-secondary)]' : demandDelta >= 0 ? 'font-mono text-[11px] flex gap-1 items-center font-medium text-[var(--text-primary)] dark:text-[#D7C9AE]' : 'font-mono text-[11px] flex gap-1 items-center font-medium text-[#C06B22] dark:text-[#E09852]'}>
                             {demandDelta === null ? '—' : `${demandDelta >= 0 ? '↑' : '↓'} ${Math.abs(demandDelta).toFixed(1)}%`}
                         </span>
                     </div>
                     <div className="p-5 px-6 border-r border-[var(--line)] flex flex-col justify-center bg-mint max-[850px]:border-t max-[850px]:border-[var(--line)] max-[520px]:border-r-0 max-[520px]:border-b max-[520px]:border-[var(--line)]">
                         <small className="flex gap-1.5 items-center font-semibold text-[10px] font-mono text-[var(--text-secondary)] uppercase">LOCAL MARGINAL PRICE</small>
-                        <strong className="block text-[28px] font-semibold font-title mt-1 mb-1 mx-0 text-lime tracking-[-0.02em]">₹{lmp.toFixed(2)} <i className="font-mono font-medium text-[12px] text-[var(--text-secondary)] not-italic ml-1">/ kWh</i></strong>
-                        <span className="font-mono text-[11px] flex gap-1 items-center font-medium text-[#10b981]">Both sides beat the grid default</span>
+                        <strong className="block text-[28px] font-semibold font-title mt-1 mb-1 mx-0 text-[var(--text-primary)] tracking-[-0.02em]">₹{lmp.toFixed(2)} <i className="font-mono font-medium text-[12px] text-[var(--text-secondary)] not-italic ml-1">/ kWh</i></strong>
+                        <span className="font-mono text-[11px] flex gap-1 items-center font-medium text-[var(--text-primary)] dark:text-[#D7C9AE]">Both sides beat the grid default</span>
                     </div>
                     <div className="p-5 px-6 flex flex-col justify-center max-[850px]:border-t max-[850px]:border-[var(--line)] max-[850px]:border-r-0">
                         <small className="flex gap-1.5 items-center font-semibold text-[10px] font-mono text-[var(--text-secondary)] uppercase">COMMUNITY BENEFIT TODAY</small>
                         <strong className="block text-[28px] font-semibold font-title mt-1 mb-1 mx-0 text-[var(--text-primary)] tracking-[-0.02em]">₹{recovered.toFixed(2)}</strong>
-                        <span className={uplift >= 0 ? 'font-mono text-[11px] flex gap-1 items-center font-medium text-[#10b981]' : 'font-mono text-[11px] flex gap-1 items-center font-medium text-[var(--orange)]'}>
+                        <span className={uplift >= 0 ? 'font-mono text-[11px] flex gap-1 items-center font-medium text-[var(--text-primary)] dark:text-[#D7C9AE]' : 'font-mono text-[11px] flex gap-1 items-center font-medium text-[#C06B22] dark:text-[#E09852]'}>
                             {cumulativeBaseline ? `${uplift >= 0 ? '↑' : '↓'} ${Math.abs(uplift).toFixed(0)}% vs FiT baseline` : '— vs FiT baseline'}
                         </span>
                     </div>
@@ -364,26 +364,8 @@ export default function App() {
                     reset={handleReset}
                 />
 
-                <footer className="mt-12 pt-6 pb-8 border-t border-[var(--line)] flex flex-col gap-5 text-[var(--text-muted)] font-mono text-[11px]">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <span className="flex items-center gap-2 font-medium text-[var(--text-secondary)]">
-                                <span className="inline-block w-2 h-2 bg-[#10b981] rounded-full shadow-[0_0_0_4px_var(--lime-glow)] animate-pulse" />
-                                P2P Settlement Engine Active
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-5 text-[11px] text-[var(--text-secondary)]">
-                            <span className="hover:text-[var(--text-primary)] transition-colors cursor-default">Privacy</span>
-                            <span className="hover:text-[var(--text-primary)] transition-colors cursor-default">Terms</span>
-                            <span className="hover:text-[var(--text-primary)] transition-colors cursor-default">Security</span>
-                            <span className="font-mono px-2 py-0.5 rounded bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.18)] text-lime text-[10px]">
-                                v2.4-live
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t border-[var(--line)] text-[10.5px]">
+                <footer className="mt-12 pt-6 pb-8 border-t border-[var(--line)] flex flex-col gap-4 text-[var(--text-muted)] font-mono text-[11px]">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[10.5px]">
                         <span>© {new Date().getFullYear()} GridShare. Decentralized local energy exchange protocol.</span>
                         <span className="text-[var(--text-secondary)]">Local marginal pricing &amp; continuous double auction matching.</span>
                     </div>

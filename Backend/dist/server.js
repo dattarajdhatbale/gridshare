@@ -36,7 +36,7 @@ wss.on('connection', (socket) => {
 });
 // Upgrade HTTP connection to WebSocket
 server.on('upgrade', (request, socket, head) => {
-    const pathname = new URL(request.url || '', `http://${request.headers.host}`).pathname;
+    const pathname = (request.url || '').split('?')[0];
     if (pathname === '/ws') {
         wss.handleUpgrade(request, socket, head, (wsSocket) => {
             wss.emit('connection', wsSocket, request);

@@ -10,6 +10,15 @@ const simulator_1 = require("../simulation/simulator");
 const middleware_1 = require("../auth/middleware");
 const scope_1 = require("../simulation/scope");
 const router = (0, express_1.Router)();
+// 0. Diagnostics Version Endpoint (unauthenticated)
+router.get('/version', (req, res) => {
+    res.json({
+        status: 'ok',
+        version: '1.0.1',
+        buildTime: new Date().toISOString(),
+        info: 'GridShare Backend active diagnostics'
+    });
+});
 // 1. Get current simulation parameters (meters, trades, tick, baseline, cumulative benefit maps)
 router.get('/state', middleware_1.requireAuth, async (req, res) => {
     try {

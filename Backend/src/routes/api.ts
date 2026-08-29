@@ -7,6 +7,16 @@ import { scopeStatePayload } from '../simulation/scope';
 
 const router = Router();
 
+// 0. Diagnostics Version Endpoint (unauthenticated)
+router.get('/version', (req: Request, res: Response) => {
+  res.json({
+    status: 'ok',
+    version: '1.0.1',
+    buildTime: new Date().toISOString(),
+    info: 'GridShare Backend active diagnostics'
+  });
+});
+
 // 1. Get current simulation parameters (meters, trades, tick, baseline, cumulative benefit maps)
 router.get('/state', requireAuth, async (req: Request, res: Response) => {
   try {

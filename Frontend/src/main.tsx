@@ -54,11 +54,10 @@ function DashboardContainer() {
     return () => clearTimeout(id);
   }, [tick]);
 
-  // WebSocket / REST API sync connection
+  // One-time initial state fetch on login
   useEffect(() => {
     if (!token) return;
 
-    // Fetch initial state first
     authFetch('/api/simulation/state')
       .then((res) => res.json())
       .then((data) => {
@@ -74,51 +73,82 @@ function DashboardContainer() {
         }
       })
       .catch((err) => console.error('Failed to load initial simulation state:', err));
-
-    // Connect WebSocket to backend
-    const ws = new WebSocket(WS_BASE_URL);
-
-    ws.onopen = () => {
-      // Authenticate socket connection
-      ws.send(JSON.stringify({ type: 'auth', token }));
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.tick !== undefined) {
-          setTick(data.tick);
-          setPlaying(data.playing);
-          setSpeed(data.speed);
-          setCumulativeBaseline(data.cumulativeBaseline);
-          setMeters(data.meters);
-          setTrades(data.trades);
-          setLedger(data.ledger);
-          setSharedPartners(data.sharedPartners);
-        }
-      } catch (e) {
-        console.error('Error parsing socket broadcast payload:', e);
-      }
-    };
-
-    ws.onerror = (err) => console.error('WebSocket connection error:', err);
-
-    return () => ws.close();
   }, [token]);
 
-  // Load supply-demand historical curve entries from backend
+
+  // Persistent WebSocket connection (one per session, auto-reconnects)
   useEffect(() => {
     if (!token) return;
 
-    authFetch('/api/simulation/history')
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setSupplyDemandHistory(data);
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+    let isCancelled = false;
+
+    function connect() {
+      if (isCancelled) return;
+
+      ws = new WebSocket(WS_BASE_URL);
+
+      ws.onopen = () => {
+        ws!.send(JSON.stringify({ type: 'auth', token }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.tick !== undefined) {
+            setTick(data.tick);
+            setPlaying(data.playing);
+            setSpeed(data.speed);
+            setCumulativeBaseline(data.cumulativeBaseline);
+            setMeters(data.meters);
+            setTrades(data.trades);
+            setLedger(data.ledger);
+            setSharedPartners(data.sharedPartners);
+          }
+        } catch (e) {
+          console.error('Error parsing socket broadcast payload:', e);
         }
-      })
-      .catch((err) => console.error('Failed to fetch simulation history:', err));
-  }, [token, tick]);
+      };
+
+      ws.onerror = (err) => console.error('WebSocket connection error:', err);
+
+      ws.onclose = () => {
+        // Auto-reconnect after 2 seconds unless effect was cleaned up
+        if (!isCancelled) {
+          reconnectTimeout = setTimeout(connect, 2000);
+        }
+      };
+    }
+
+    connect();
+
+    return () => {
+      isCancelled = true;
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (ws) ws.close();
+    };
+  }, [token]);
+
+  // Poll supply-demand historical curve entries every 5 seconds
+  useEffect(() => {
+    if (!token) return;
+
+    function fetchHistory() {
+      authFetch('/api/simulation/history')
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setSupplyDemandHistory(data);
+          }
+        })
+        .catch((err) => console.error('Failed to fetch simulation history:', err));
+    }
+
+    fetchHistory(); // initial fetch
+    const interval = setInterval(fetchHistory, 5000);
+    return () => clearInterval(interval);
+  }, [token]);
 
   // Update frontend selection reference when meters update
   useEffect(() => {

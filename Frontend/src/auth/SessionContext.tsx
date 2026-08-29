@@ -30,41 +30,31 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [meter, setMeter] = useState<HouseholdMeter | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Attempt to restore session on mount
+  // Automatically clear session and log out on mount/refresh
   useEffect(() => {
-    async function restoreSession() {
+    async function handleAutoLogout() {
       const savedToken = localStorage.getItem('gridshare-token');
-      if (!savedToken) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${savedToken}`,
-          },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setToken(savedToken);
-          setRole(data.role);
-          if (data.meter) {
-            setMeter(data.meter);
-          }
-        } else {
-          // If token is invalid or expired, clear it silently
-          localStorage.removeItem('gridshare-token');
+      if (savedToken) {
+        try {
+          // Invalidate the session on the backend server
+          await fetch(`${API_BASE_URL}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${savedToken}`,
+            },
+          });
+        } catch (err) {
+          console.error('Error invalidating session during auto-logout:', err);
         }
-      } catch (err) {
-        console.error('Error restoring session:', err);
-      } finally {
-        setLoading(false);
+        localStorage.removeItem('gridshare-token');
       }
+      setToken(null);
+      setRole(null);
+      setMeter(null);
+      setLoading(false);
     }
 
-    restoreSession();
+    handleAutoLogout();
   }, []);
 
   const login = async (meterId: string, pin: string) => {

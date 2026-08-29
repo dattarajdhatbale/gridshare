@@ -2,14 +2,17 @@ import { Router, Request, Response } from 'express';
 import { engine } from '../simulation/engine';
 import prisma from '../db/prismaClient';
 import { simulateMetersForTick } from '../simulation/simulator';
+import { requireAuth, requireOperator } from '../auth/middleware';
+import { scopeStatePayload } from '../simulation/scope';
 
 const router = Router();
 
 // 1. Get current simulation parameters (meters, trades, tick, baseline, cumulative benefit maps)
-router.get('/state', async (req: Request, res: Response) => {
+router.get('/state', requireAuth, async (req: Request, res: Response) => {
   try {
     const payload = await engine.getCurrentStatePayload();
-    res.json(payload);
+    const scopedPayload = scopeStatePayload(payload, req.session!);
+    res.json(scopedPayload);
   } catch (error) {
     console.error('Error fetching state:', error);
     res.status(500).json({ error: 'Failed to retrieve simulation state.' });
@@ -17,7 +20,7 @@ router.get('/state', async (req: Request, res: Response) => {
 });
 
 // 2. Play/Pause or update simulation speed
-router.post('/control', async (req: Request, res: Response) => {
+router.post('/control', requireAuth, requireOperator, async (req: Request, res: Response) => {
   try {
     const { playing, speed } = req.body;
     await engine.setControl(playing, speed);
@@ -29,7 +32,7 @@ router.post('/control', async (req: Request, res: Response) => {
 });
 
 // 3. Jump to a specific tick manually (e.g. simulate cloud cover at tick 30)
-router.post('/tick', async (req: Request, res: Response) => {
+router.post('/tick', requireAuth, requireOperator, async (req: Request, res: Response) => {
   try {
     const { tick } = req.body;
     if (tick === undefined || typeof tick !== 'number' || tick < 0 || tick >= 96) {
@@ -44,7 +47,7 @@ router.post('/tick', async (req: Request, res: Response) => {
 });
 
 // 4. Reset simulation states, clear databases logs, and restart from tick 62
-router.post('/reset', async (req: Request, res: Response) => {
+router.post('/reset', requireAuth, requireOperator, async (req: Request, res: Response) => {
   try {
     await engine.reset();
     res.json({ success: true });
@@ -55,7 +58,7 @@ router.post('/reset', async (req: Request, res: Response) => {
 });
 
 // 5. Fetch sliding history array of last 15 intervals to feed frontend demand-supply curves
-router.get('/history', async (req: Request, res: Response) => {
+router.get('/history', requireAuth, async (req: Request, res: Response) => {
   try {
     const state = await prisma.simulationState.findUnique({ where: { id: 1 } });
     const dbMeters = await prisma.meter.findMany();

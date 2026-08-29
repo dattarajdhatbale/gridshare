@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { CircleHelp, Sun, Moon, Bell, BellOff, Sparkles, TrendingUp, ShieldCheck, User } from 'lucide-react';
+import { CircleHelp, Sun, Moon, Bell, BellOff, Sparkles, TrendingUp, ShieldCheck, User, Edit3, Check, X, LogOut } from 'lucide-react';
 import logo from '../assets/logo.svg';
 import { Meter } from '../simulation/model';
+import { useSession } from '../auth/SessionContext';
+import { authFetch } from '../auth/api';
 
 interface HeaderProps {
   onInfo: () => void;
@@ -18,8 +20,15 @@ export function Header({
   selectedMeter,
   lifetimeSavings = 1248.50,
 }: HeaderProps) {
+  const { role, meter, setMeter, logout } = useSession();
+  
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+
+  // Renaming states
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newDisplayName, setNewDisplayName] = useState('');
+  const [renameError, setRenameError] = useState<string | null>(null);
 
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -39,15 +48,52 @@ export function Header({
       }
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setShowProfile(false);
+        setIsRenaming(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const userName = selectedMeter?.name || 'Asha Sharma';
-  const meterId = selectedMeter?.id || 'M-01';
-  const roleName = selectedMeter?.role || 'prosumer';
+  // Sync renaming input when profile changes or opens
+  useEffect(() => {
+    if (showProfile) {
+      setNewDisplayName(meter?.displayName || meter?.name || selectedMeter?.name || '');
+      setRenameError(null);
+    }
+  }, [showProfile, meter, selectedMeter]);
+
+  const handleRename = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRenameError(null);
+    try {
+      const res = await authFetch('/api/auth/me/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ displayName: newDisplayName }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to update display name');
+      }
+
+      const updatedMeter = await res.json();
+      setMeter(updatedMeter);
+      setIsRenaming(false);
+    } catch (err: any) {
+      console.error('Rename display name error:', err);
+      setRenameError(err.message || 'Error updating profile.');
+    }
+  };
+
+  const userName = role === 'operator' 
+    ? 'Grid Operator' 
+    : (meter?.displayName || meter?.name || selectedMeter?.name || 'Resident');
+  const meterId = role === 'operator' ? 'SYSTEM' : (meter?.id || selectedMeter?.id || 'M-XX');
+  const roleName = role === 'operator' ? 'operator' : (meter?.role || selectedMeter?.role || 'household');
 
   return (
     <header className="h-[76px] bg-[var(--header-bg)] border-b border-[var(--header-border)] flex items-center px-4 sm:px-6 justify-between sticky top-0 z-[100] transition-all duration-300">
@@ -177,13 +223,47 @@ export function Header({
                 <div className="w-12 h-12 rounded-full border-[1.5px] border-[#2D2D2D] dark:border-[#D7C9AE] bg-[#E5C378] text-[#2D2D2D] flex items-center justify-center shadow-sm flex-shrink-0 font-bold">
                   <User size={22} />
                 </div>
-                <div className="overflow-hidden flex flex-col justify-center">
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="font-bold font-title text-[17px] text-[var(--text-primary)] m-0 truncate leading-tight">
-                      {userName}
-                    </h3>
-                    <ShieldCheck size={16} className="text-[#C06B22] dark:text-[#E5C378] flex-shrink-0" />
-                  </div>
+                <div className="overflow-hidden flex-1 flex flex-col justify-center">
+                  {isRenaming ? (
+                    <form onSubmit={handleRename} className="flex flex-col gap-1.5 w-full">
+                      <div className="flex items-center gap-1.5 w-full">
+                        <input
+                          type="text"
+                          value={newDisplayName}
+                          onChange={(e) => setNewDisplayName(e.target.value)}
+                          maxLength={25}
+                          className="flex-1 text-[13.5px] font-sans font-semibold py-1 px-2 border border-[var(--card-border)] bg-[rgba(0,0,0,0.02)] dark:bg-[rgba(255,255,255,0.02)] text-[var(--text-primary)] rounded focus:outline-none"
+                          autoFocus
+                        />
+                        <button type="submit" className="p-1 text-green-500 hover:opacity-85 cursor-pointer bg-transparent border-none">
+                          <Check size={16} />
+                        </button>
+                        <button type="button" onClick={() => setIsRenaming(false)} className="p-1 text-red-500 hover:opacity-85 cursor-pointer bg-transparent border-none">
+                          <X size={16} />
+                        </button>
+                      </div>
+                      {renameError && <span className="text-[10px] text-red-500 leading-none">{renameError}</span>}
+                    </form>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="font-bold font-title text-[17px] text-[var(--text-primary)] m-0 truncate leading-tight">
+                        {userName}
+                      </h3>
+                      {role === 'household' && (
+                        <button
+                          onClick={() => {
+                            setIsRenaming(true);
+                            setRenameError(null);
+                          }}
+                          className="p-0.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer bg-transparent border-none flex-shrink-0"
+                          title="Rename Display Name"
+                        >
+                          <Edit3 size={13} />
+                        </button>
+                      )}
+                      <ShieldCheck size={16} className="text-[#C06B22] dark:text-[#E5C378] flex-shrink-0" />
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 mt-1">
                     <span className="font-mono text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-[rgba(45,45,45,0.08)] dark:bg-[rgba(215,201,174,0.15)] text-[var(--text-primary)] border border-[var(--line)] leading-none">
                       {meterId}
@@ -199,7 +279,8 @@ export function Header({
               <div className="my-4 p-4 bg-[#F5EFE6] dark:bg-[rgba(215,201,174,0.06)] border border-[var(--line)] rounded-[18px]">
                 <div className="flex justify-between items-center mb-1">
                   <label className="font-mono text-[9px] font-bold text-[var(--text-secondary)] tracking-[0.08em] uppercase flex items-center gap-1">
-                    <Sparkles size={11} className="text-[#C06B22] dark:text-[#E5C378]" /> LIFETIME SAVINGS VS GRID
+                    <Sparkles size={11} className="text-[#C06B22] dark:text-[#E5C378]" /> 
+                    {role === 'operator' ? 'TOTAL COMMUNITY BENEFIT' : 'LIFETIME SAVINGS VS GRID'}
                   </label>
                   <span className="font-mono text-[10px] text-[var(--text-primary)] font-bold bg-[rgba(45,45,45,0.08)] dark:bg-[rgba(215,201,174,0.15)] px-1.5 py-0.5 rounded">
                     +24.6%
@@ -209,23 +290,42 @@ export function Header({
                   ₹{lifetimeSavings.toFixed(2)}
                 </div>
                 <span className="text-[11.5px] text-[var(--text-secondary)] block leading-snug">
-                  Total capital retained vs standard utility tariff
+                  {role === 'operator' 
+                    ? 'Aggregate economic benefit across all local households' 
+                    : 'Total capital retained vs standard utility tariff'}
                 </span>
               </div>
 
               {/* Account Quick Details */}
               <div className="grid grid-cols-2 gap-3 pt-1 text-[11px]">
                 <div className="bg-[rgba(45,45,45,0.04)] dark:bg-[rgba(215,201,174,0.04)] p-3 rounded-[14px] border border-[var(--line)] flex flex-col justify-center">
-                  <span className="text-[var(--text-muted)] block text-[9px] font-mono uppercase tracking-[0.05em] mb-0.5">GRID DEFAULT</span>
+                  <span className="text(--text-muted) block text-[9px] font-mono uppercase tracking-[0.05em] mb-0.5">GRID DEFAULT</span>
                   <strong className="text-[var(--text-primary)] font-semibold text-[13px]">₹7.00/kWh</strong>
                 </div>
                 <div className="bg-[rgba(45,45,45,0.04)] dark:bg-[rgba(215,201,174,0.04)] p-3 rounded-[14px] border border-[var(--line)] flex flex-col justify-center">
-                  <span className="text-[var(--text-muted)] block text-[9px] font-mono uppercase tracking-[0.05em] mb-0.5">STATUS</span>
+                  <span className="text(--text-muted) block text-[9px] font-mono uppercase tracking-[0.05em] mb-0.5">STATUS</span>
                   <strong className="text-[var(--text-primary)] font-semibold text-[13px] flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-lime animate-pulse" /> Active Node
+                    {role === 'operator' ? (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#E5C378] animate-pulse" /> Control Node
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-lime animate-pulse" /> Active Node
+                      </>
+                    )}
                   </strong>
                 </div>
               </div>
+
+              {/* Logout Button */}
+              <button 
+                onClick={logout}
+                className="w-full mt-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[12.5px] font-semibold rounded-[14px] transition-all border border-red-500/20 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-[0.99] hover:scale-[1.01]"
+              >
+                <LogOut size={14} />
+                <span>Sign Out</span>
+              </button>
             </div>
           )}
         </div>

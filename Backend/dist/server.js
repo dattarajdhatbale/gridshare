@@ -9,6 +9,7 @@ const ws_1 = __importDefault(require("ws"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const api_1 = __importDefault(require("./routes/api"));
+const auth_1 = __importDefault(require("./routes/auth"));
 const engine_1 = require("./simulation/engine");
 const prismaClient_1 = __importDefault(require("./db/prismaClient"));
 dotenv_1.default.config();
@@ -25,6 +26,7 @@ app.get('/health', (req, res) => {
 });
 // API routing
 app.use('/api/simulation', api_1.default);
+app.use('/api/auth', auth_1.default);
 // Create HTTP server
 const server = http_1.default.createServer(app);
 // Setup WebSocket Server

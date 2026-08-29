@@ -3,6 +3,8 @@ import { simulateMetersForTick, lmpFor } from './simulator';
 import { optimizeTrades } from './matching';
 import { Meter, Trade, PFIT, PGRID } from './model';
 import { WebSocket } from 'ws';
+import { resolveSession } from '../auth/session';
+import { scopeStatePayload } from './scope';
 
 const defaultSeedMeters = [
   { id: 'M-01', name: 'Asha Solar', role: 'solar', pv: 4.8, baseLoad: 1.7, distance: 0 },
@@ -21,23 +23,58 @@ const defaultSeedMeters = [
 
 class SimulationEngine {
   private intervalId: NodeJS.Timeout | null = null;
-  private wsClients: Set<WebSocket> = new Set();
+  private unauthenticatedSockets: Map<WebSocket, NodeJS.Timeout> = new Map();
+  private authenticatedSockets: Map<WebSocket, { role: string; meterId: string | null }> = new Map();
 
   public registerClient(ws: WebSocket) {
-    this.wsClients.add(ws);
-    ws.on('close', () => this.wsClients.delete(ws));
-    // Send current state to newly connected client
-    this.sendCurrentStateToClient(ws);
+    // 10-second authentication window
+    const timeoutId = setTimeout(() => {
+      if (this.unauthenticatedSockets.has(ws)) {
+        this.unauthenticatedSockets.delete(ws);
+        ws.close(4001, 'Authentication timeout');
+      }
+    }, 10000);
+    this.unauthenticatedSockets.set(ws, timeoutId);
+
+    ws.on('message', async (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+        if (message.type === 'auth' && message.token) {
+          const session = await resolveSession(message.token);
+          if (session) {
+            // Cancel the timeout
+            const tId = this.unauthenticatedSockets.get(ws);
+            if (tId) clearTimeout(tId);
+            this.unauthenticatedSockets.delete(ws);
+
+            // Register as authenticated
+            this.authenticatedSockets.set(ws, { role: session.role, meterId: session.meterId });
+
+            // Send current scoped state to newly authenticated client
+            await this.sendCurrentStateToClient(ws);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('WebSocket client auth parsing error:', err);
+      }
+
+      // If we reach here, authentication failed or message was invalid
+      const tId = this.unauthenticatedSockets.get(ws);
+      if (tId) clearTimeout(tId);
+      this.unauthenticatedSockets.delete(ws);
+      ws.close(4003, 'Invalid authentication token');
+    });
+
+    ws.on('close', () => {
+      const tId = this.unauthenticatedSockets.get(ws);
+      if (tId) clearTimeout(tId);
+      this.unauthenticatedSockets.delete(ws);
+      this.authenticatedSockets.delete(ws);
+    });
   }
 
-  public broadcast(data: any) {
-    const payload = JSON.stringify(data);
-    for (const client of this.wsClients) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(payload);
-      }
-    }
-  }
+
 
   public async start() {
     try {
@@ -57,6 +94,8 @@ class SimulationEngine {
       const meterCount = await prisma.meter.count();
       if (meterCount === 0) {
         for (const item of defaultSeedMeters) {
+          const num = parseInt(item.id.replace('M-', ''), 10);
+          const pin = (1000 + num).toString();
           await prisma.meter.upsert({
             where: { id: item.id },
             update: {},
@@ -69,6 +108,8 @@ class SimulationEngine {
               distance: item.distance,
               earned: 0.0,
               sharedPartners: '',
+              pin: pin,
+              displayName: null,
             },
           });
         }
@@ -312,13 +353,20 @@ class SimulationEngine {
 
   public async broadcastState() {
     const payload = await this.getCurrentStatePayload();
-    this.broadcast(payload);
+    for (const [ws, session] of this.authenticatedSockets.entries()) {
+      if (ws.readyState === WebSocket.OPEN) {
+        const scoped = scopeStatePayload(payload, session);
+        ws.send(JSON.stringify(scoped));
+      }
+    }
   }
 
   private async sendCurrentStateToClient(ws: WebSocket) {
-    const payload = await this.getCurrentStatePayload();
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(payload));
+    const session = this.authenticatedSockets.get(ws);
+    if (session && ws.readyState === WebSocket.OPEN) {
+      const payload = await this.getCurrentStatePayload();
+      const scoped = scopeStatePayload(payload, session);
+      ws.send(JSON.stringify(scoped));
     }
   }
 

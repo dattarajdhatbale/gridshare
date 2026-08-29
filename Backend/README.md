@@ -73,3 +73,46 @@ Broadcasting occurs on every tick step. Clients receive a JSON payload containin
    ```bash
    npm run dev
    ```
+
+---
+
+## 🔑 Authentication, Roles & Security
+
+We have implemented lightweight authentication with a role split between **Household Residents** and the **Grid Operator**.
+
+### 🌟 New Environment Variables
+* **`OPERATOR_CODE`** (Backend): Secret credential used by the Grid Operator (defaults to `"grid-admin"`).
+* **`DATABASE_URL`** (Backend): PostgreSQL connection string for production.
+* **`VITE_API_BASE_URL`** (Frontend): Backend server HTTP API URL.
+* **`VITE_WS_BASE_URL`** (Frontend): Backend server WebSocket gateway URL.
+
+### 🔑 Demo Login Credentials
+1. **Household Residents**:
+   - Choose any household from the select grid on the login screen.
+   - Enter their 4-digit PIN, which is deterministically generated as: `1000 + meter number` (e.g., **`M-01`** PIN is **`1001`**, **`M-03`** PIN is **`1003`**).
+2. **Grid Operator**:
+   - Select the Operator tab.
+   - Enter the system code: **`grid-admin`** (or your custom `OPERATOR_CODE` env var value).
+
+---
+
+## 🚀 Production Database Migration (Render)
+
+To apply the new auth session schemas and PINs to the existing Render database without losing any seeded meters or accumulated trade history:
+
+1. **Configure Environment Variables**:
+   In your Render service dashboard, ensure the `DATABASE_URL` env variable points to your live PostgreSQL database instance.
+
+2. **Deploy the Migration**:
+   Run the following command from the Backend root folder to apply the schema modifications (adding `Session` model, adding `pin` and `displayName` columns to `Meter` with safe default values):
+   ```bash
+   npx prisma db push
+   ```
+   *Note: Using `prisma db push` updates the remote database schema directly without dropping any tables or losing existing trade logs.*
+
+3. **Backfill deterministic PINs**:
+   Run the seed script to update the newly created `pin` column for all existing meters:
+   ```bash
+   npx ts-node prisma/seed.ts
+   ```
+   *This script upserts existing meter records, updating the deterministic PIN values and leaving existing trade lists, readings, and profit balances intact.*

@@ -16,6 +16,8 @@ export interface Meter {
   powerFactor: number;
   status: 'surplus' | 'deficit';
   distance: number;
+  displayName?: string | null;
+  earned?: number;
 }
 
 export interface Trade {

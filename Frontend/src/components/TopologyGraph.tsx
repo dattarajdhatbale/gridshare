@@ -1,9 +1,9 @@
-import { Meter } from '../simulation/model';
+import { Meter, PublicMeter } from '../simulation/model';
 
 interface TopologyGraphProps {
-  meters: Meter[];
-  selected: Meter;
-  onSelect: (m: Meter) => void;
+  meters: (Meter | PublicMeter)[];
+  selected: Meter | PublicMeter;
+  onSelect: (m: any) => void;
   sharedPartners?: string[]; // IDs of partners shared with throughout the day
   activePartners?: string[]; // IDs of partners actively trading right now
 }
@@ -122,23 +122,28 @@ export function TopologyGraph({
           </g>
 
           {/* Render microgrid nodes */}
-          {meters.map((m, i) => (
-            <g
-              key={m.id}
-              onClick={() => onSelect(m)}
-              className="node"
-              transform={`translate(${pts[i][0]},${pts[i][1]})`}
-            >
-              <circle
-                r={m.id === selected.id ? 17 : 12}
-                className={`${m.role} ${m.id === selected.id ? 'selected' : ''}`}
-              />
-              <text y={28} textAnchor="middle">
-                {m.id}
-              </text>
-              {m.id === selected.id && <circle r="21" className="ring" />}
-            </g>
-          ))}
+          {meters.map((m, i) => {
+            const isDimmed = m.id !== selected.id && 'isCounterparty' in m && !(m as any).isCounterparty;
+            return (
+              <g
+                key={m.id}
+                onClick={() => onSelect(m)}
+                className="node cursor-pointer transition-opacity duration-300"
+                style={{ opacity: isDimmed ? 0.28 : 1 }}
+                transform={`translate(${pts[i][0]},${pts[i][1]})`}
+              >
+                <title>{(m as any).displayName || m.name} · {m.role}</title>
+                <circle
+                  r={m.id === selected.id ? 17 : 12}
+                  className={`${m.role} ${m.id === selected.id ? 'selected' : ''}`}
+                />
+                <text y={28} textAnchor="middle">
+                  {m.id}
+                </text>
+                {m.id === selected.id && <circle r="21" className="ring" />}
+              </g>
+            );
+          })}
         </svg>
 
         <div className="flex gap-4 flex-wrap font-mono text-[11px] text-[var(--text-secondary)] mt-3 mx-0.5 mb-0">

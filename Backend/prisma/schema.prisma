@@ -24,6 +24,18 @@ model Meter {
   distance       Float
   earned         Float  @default(0.0)
   sharedPartners String @default("") // Comma-separated list of meter IDs, e.g. "M-02,M-03"
+  pin            String @default("0000")
+  displayName    String?
+}
+
+model Session {
+  token     String   @id
+  meterId   String?
+  role      String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
 }
 
 model MeterReading {

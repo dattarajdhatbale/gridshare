@@ -44,6 +44,9 @@ async function main() {
 
   // 3. Upsert meters seed details
   for (const item of seedData) {
+    const num = parseInt(item.id.replace('M-', ''), 10);
+    const pin = (1000 + num).toString();
+
     await prisma.meter.upsert({
       where: { id: item.id },
       update: {
@@ -54,6 +57,8 @@ async function main() {
         distance: item.distance,
         earned: 0.0,
         sharedPartners: '',
+        pin: pin,
+        displayName: null,
       },
       create: {
         id: item.id,
@@ -64,6 +69,8 @@ async function main() {
         distance: item.distance,
         earned: 0.0,
         sharedPartners: '',
+        pin: pin,
+        displayName: null,
       },
     });
   }

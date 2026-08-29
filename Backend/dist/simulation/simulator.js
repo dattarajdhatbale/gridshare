@@ -48,6 +48,8 @@ function simulateMetersForTick(tick, dbMeters) {
             powerFactor: pf,
             status: net > 0 ? 'surplus' : 'deficit',
             distance: m.distance,
+            displayName: m.displayName,
+            earned: m.earned,
         };
     });
 }

@@ -4,6 +4,7 @@ import ws from 'ws';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import apiRouter from './routes/api';
+import authRouter from './routes/auth';
 import { engine } from './simulation/engine';
 import prisma from './db/prismaClient';
 
@@ -25,6 +26,7 @@ app.get('/health', (req, res) => {
 
 // API routing
 app.use('/api/simulation', apiRouter);
+app.use('/api/auth', authRouter);
 
 // Create HTTP server
 const server = http.createServer(app);

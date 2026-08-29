@@ -9,6 +9,8 @@ const simulator_1 = require("./simulator");
 const matching_1 = require("./matching");
 const model_1 = require("./model");
 const ws_1 = require("ws");
+const session_1 = require("../auth/session");
+const scope_1 = require("./scope");
 const defaultSeedMeters = [
     { id: 'M-01', name: 'Asha Solar', role: 'solar', pv: 4.8, baseLoad: 1.7, distance: 0 },
     { id: 'M-02', name: 'Ravi Home', role: 'consumer', pv: 0.0, baseLoad: 3.4, distance: 120 },
@@ -25,20 +27,53 @@ const defaultSeedMeters = [
 ];
 class SimulationEngine {
     intervalId = null;
-    wsClients = new Set();
+    unauthenticatedSockets = new Map();
+    authenticatedSockets = new Map();
     registerClient(ws) {
-        this.wsClients.add(ws);
-        ws.on('close', () => this.wsClients.delete(ws));
-        // Send current state to newly connected client
-        this.sendCurrentStateToClient(ws);
-    }
-    broadcast(data) {
-        const payload = JSON.stringify(data);
-        for (const client of this.wsClients) {
-            if (client.readyState === ws_1.WebSocket.OPEN) {
-                client.send(payload);
+        // 10-second authentication window
+        const timeoutId = setTimeout(() => {
+            if (this.unauthenticatedSockets.has(ws)) {
+                this.unauthenticatedSockets.delete(ws);
+                ws.close(4001, 'Authentication timeout');
             }
-        }
+        }, 10000);
+        this.unauthenticatedSockets.set(ws, timeoutId);
+        ws.on('message', async (data) => {
+            try {
+                const message = JSON.parse(data.toString());
+                if (message.type === 'auth' && message.token) {
+                    const session = await (0, session_1.resolveSession)(message.token);
+                    if (session) {
+                        // Cancel the timeout
+                        const tId = this.unauthenticatedSockets.get(ws);
+                        if (tId)
+                            clearTimeout(tId);
+                        this.unauthenticatedSockets.delete(ws);
+                        // Register as authenticated
+                        this.authenticatedSockets.set(ws, { role: session.role, meterId: session.meterId });
+                        // Send current scoped state to newly authenticated client
+                        await this.sendCurrentStateToClient(ws);
+                        return;
+                    }
+                }
+            }
+            catch (err) {
+                console.error('WebSocket client auth parsing error:', err);
+            }
+            // If we reach here, authentication failed or message was invalid
+            const tId = this.unauthenticatedSockets.get(ws);
+            if (tId)
+                clearTimeout(tId);
+            this.unauthenticatedSockets.delete(ws);
+            ws.close(4003, 'Invalid authentication token');
+        });
+        ws.on('close', () => {
+            const tId = this.unauthenticatedSockets.get(ws);
+            if (tId)
+                clearTimeout(tId);
+            this.unauthenticatedSockets.delete(ws);
+            this.authenticatedSockets.delete(ws);
+        });
     }
     async start() {
         try {
@@ -57,6 +92,8 @@ class SimulationEngine {
             const meterCount = await prismaClient_1.default.meter.count();
             if (meterCount === 0) {
                 for (const item of defaultSeedMeters) {
+                    const num = parseInt(item.id.replace('M-', ''), 10);
+                    const pin = (1000 + num).toString();
                     await prismaClient_1.default.meter.upsert({
                         where: { id: item.id },
                         update: {},
@@ -69,6 +106,8 @@ class SimulationEngine {
                             distance: item.distance,
                             earned: 0.0,
                             sharedPartners: '',
+                            pin: pin,
+                            displayName: null,
                         },
                     });
                 }
@@ -288,12 +327,19 @@ class SimulationEngine {
     }
     async broadcastState() {
         const payload = await this.getCurrentStatePayload();
-        this.broadcast(payload);
+        for (const [ws, session] of this.authenticatedSockets.entries()) {
+            if (ws.readyState === ws_1.WebSocket.OPEN) {
+                const scoped = (0, scope_1.scopeStatePayload)(payload, session);
+                ws.send(JSON.stringify(scoped));
+            }
+        }
     }
     async sendCurrentStateToClient(ws) {
-        const payload = await this.getCurrentStatePayload();
-        if (ws.readyState === ws_1.WebSocket.OPEN) {
-            ws.send(JSON.stringify(payload));
+        const session = this.authenticatedSockets.get(ws);
+        if (session && ws.readyState === ws_1.WebSocket.OPEN) {
+            const payload = await this.getCurrentStatePayload();
+            const scoped = (0, scope_1.scopeStatePayload)(payload, session);
+            ws.send(JSON.stringify(scoped));
         }
     }
     async getCurrentStatePayload() {

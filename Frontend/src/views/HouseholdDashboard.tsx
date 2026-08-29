@@ -44,7 +44,7 @@ export function HouseholdDashboard({
   handleReset,
 }: HouseholdDashboardProps) {
   const { meter, logout } = useSession();
-  
+
   // Find active simulated/scoped meter for ourselves
   const liveMyMeter = useMemo(() => {
     return (meters.find(m => m.id === meter?.id) || meter) as Meter;
@@ -198,9 +198,10 @@ export function HouseholdDashboard({
         lifetimeSavings={1248.50 + myEarned}
         trades={trades}
         sharedPartners={sharedPartners[liveMyMeter.id] || []}
+        tick={tick}
       />
       <main className="w-full px-4 sm:px-6 my-0 py-3 pb-3 flex-1">
-        
+
 
         {/* Section 1: Hero Home Analytics & Demand Supply Curve */}
         <section className="grid grid-cols-[1fr_2fr] gap-6 items-stretch mb-9 max-[850px]:flex max-[850px]:flex-col max-[850px]:gap-5">
@@ -327,23 +328,21 @@ export function HouseholdDashboard({
           {tradeSentences.length > 0 ? (
             <div className="flex flex-col gap-2.5 max-h-[300px] overflow-y-auto pr-1">
               {tradeSentences.map((ts) => (
-                <div 
-                  key={ts.id} 
+                <div
+                  key={ts.id}
                   className="flex items-center justify-between bg-mint p-3.5 rounded-[14px] border border-[var(--card-border)] text-[13px] hover:bg-[rgba(45,45,45,0.02)] transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      ts.type === 'sell' 
-                        ? 'bg-[rgba(229,195,120,0.12)] text-[#E5C378]' 
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${ts.type === 'sell'
+                        ? 'bg-[rgba(229,195,120,0.12)] text-[#E5C378]'
                         : 'bg-[rgba(192,107,34,0.12)] text-[#C06B22]'
-                    }`}>
+                      }`}>
                       {ts.type === 'sell' ? <ArrowUpRight size={16} /> : <ArrowDownLeft size={16} />}
                     </div>
                     <span className="text-[var(--text-primary)] font-medium leading-relaxed">{ts.text}</span>
                   </div>
-                  <strong className={`font-mono font-bold text-[14px] ml-4 ${
-                    ts.type === 'sell' ? 'text-[#E5C378]' : 'text-[#C06B22]'
-                  }`}>
+                  <strong className={`font-mono font-bold text-[14px] ml-4 ${ts.type === 'sell' ? 'text-[#E5C378]' : 'text-[#C06B22]'
+                    }`}>
                     {ts.value}
                   </strong>
                 </div>

@@ -19,8 +19,8 @@ export function MeterRoleCard({
 
   // Find all active trades in this interval for the selected meter
   const activeTrades = trades.filter((t) => (
-    seller 
-      ? (t.seller === meter.id || t.seller === meter.name) 
+    seller
+      ? (t.seller === meter.id || t.seller === meter.name)
       : (t.buyer === meter.id || t.buyer === meter.name)
   ));
 
@@ -54,7 +54,6 @@ export function MeterRoleCard({
         <h4 className="m-0 mb-2.5 text-[11px] tracking-[0.08em] text-[var(--text-secondary)] uppercase">
           {seller ? 'Surplus Sharing Activity' : 'Surplus Consumption Activity'}
         </h4>
-
         {activeTrades.length > 0 ? (
           <div className="flex flex-col gap-2">
             {activeTrades.map((t) => (

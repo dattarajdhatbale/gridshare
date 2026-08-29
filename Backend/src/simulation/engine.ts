@@ -21,10 +21,42 @@ const defaultSeedMeters = [
   { id: 'M-12', name: 'Zoya Home', role: 'consumer', pv: 0.0, baseLoad: 2.2, distance: 760 },
 ];
 
+interface StatePayload {
+  tick: number;
+  playing: boolean;
+  speed: string;
+  cumulativeBaseline: number;
+  meters: Meter[];
+  trades: Trade[];
+  ledger: Record<string, number>;
+  sharedPartners: Record<string, string[]>;
+}
+
 class SimulationEngine {
   private intervalId: NodeJS.Timeout | null = null;
   private unauthenticatedSockets: Map<WebSocket, NodeJS.Timeout> = new Map();
   private authenticatedSockets: Map<WebSocket, { role: string; meterId: string | null }> = new Map();
+
+  // ---------------------------------------------------------------------
+  // THE FIX: a single canonical snapshot of "what got cleared this interval".
+  //
+  // Previously, `getCurrentStatePayload()` re-ran `optimizeTrades()` from
+  // scratch on every single broadcast, every new WebSocket auth, and every
+  // REST poll of /api/simulation/state. Since `optimizeTrades()` mints a
+  // fresh sequential trade id AND a fresh `Date.now()`-based timestamp on
+  // every call, that meant the "cleared trades" the Contracts card received
+  // were never actually the same objects that `runSimulationStep()` had just
+  // persisted to the database for that interval — they were silently
+  // rebuilt, with different ids/timestamps, on every read. Nothing was ever
+  // being "lifted"; it was being recomputed and could drift on every call.
+  //
+  // Now, `runSimulationStep()` computes trades exactly ONCE per interval and
+  // stores the result here. Every broadcast, every newly-authenticated
+  // socket, and every REST snapshot reads from this cache instead of calling
+  // the matching engine again, so all clients see the exact same trade
+  // objects for a given tick.
+  // ---------------------------------------------------------------------
+  private currentPayload: StatePayload | null = null;
 
   public registerClient(ws: WebSocket) {
     // 10-second authentication window
@@ -74,8 +106,6 @@ class SimulationEngine {
     });
   }
 
-
-
   public async start() {
     try {
       let state = await prisma.simulationState.findUnique({ where: { id: 1 } });
@@ -114,6 +144,11 @@ class SimulationEngine {
           });
         }
       }
+
+      // Build an initial canonical snapshot immediately so the very first
+      // client to connect (before the first tick has fired) gets a real,
+      // stable snapshot instead of triggering an ad-hoc recompute.
+      await this.refreshSnapshot(state.tick);
 
       if (state && state.playing) {
         this.startTimer(state.speed);
@@ -159,6 +194,12 @@ class SimulationEngine {
       this.stopTimer();
     }
 
+    // Play/pause and speed changes don't clear a new interval — keep the
+    // last cleared trades exactly as they were instead of re-deriving them.
+    if (this.currentPayload) {
+      this.currentPayload = { ...this.currentPayload, playing: nextPlaying, speed: nextSpeed };
+    }
+
     // Broadcast state update
     await this.broadcastState();
   }
@@ -199,6 +240,12 @@ class SimulationEngine {
     }
   }
 
+  /**
+   * Runs one simulated interval: computes physics, clears the market ONCE,
+   * persists the results, and caches that exact same trade/meter data as the
+   * canonical "current state" snapshot every client reads from. This is the
+   * single source of truth fix — nothing downstream re-derives trades again.
+   */
   private async runSimulationStep(tick: number) {
     try {
       // 1. Fetch current database states
@@ -209,7 +256,7 @@ class SimulationEngine {
       // 2. Compute physics (generation and load)
       const simulatedMeters = simulateMetersForTick(tick, dbMeters);
 
-      // 3. Resolve market trading clearing
+      // 3. Resolve market trading clearing — computed exactly once per tick.
       const trades = optimizeTrades(simulatedMeters);
 
       // 4. Update the DB: accumulate savings, ledger, counterparties, and baseline utility
@@ -246,6 +293,7 @@ class SimulationEngine {
       });
 
       // 5. Update cumulative baseline
+      const updatedBaseline = state.cumulativeBaseline + tickBaseline;
       await prisma.simulationState.update({
         where: { id: 1 },
         data: {
@@ -255,23 +303,35 @@ class SimulationEngine {
         },
       });
 
-      // 6. Update individual meters
-      for (const meterId of Object.keys(meterEarningsUpdate)) {
-        const update = meterEarningsUpdate[meterId];
-        const m = dbMeters.find((x) => x.id === meterId);
-        if (m) {
-          const currentPartners = m.sharedPartners ? m.sharedPartners.split(',') : [];
+      // 6. Update individual meters, and build the in-memory ledger /
+      // sharedPartners snapshot from the SAME numbers we just wrote — instead
+      // of re-querying the DB a second time (which is what previously let the
+      // broadcast diverge from what was actually persisted).
+      const ledger: Record<string, number> = {};
+      const sharedPartners: Record<string, string[]> = {};
+
+      for (const m of dbMeters) {
+        const update = meterEarningsUpdate[m.id];
+        let currentPartners = m.sharedPartners ? m.sharedPartners.split(',') : [];
+        let newEarned = m.earned;
+
+        if (update) {
           if (update.partner && !currentPartners.includes(update.partner)) {
-            currentPartners.push(update.partner);
+            currentPartners = [...currentPartners, update.partner];
           }
+          newEarned = m.earned + update.earned;
+
           await prisma.meter.update({
-            where: { id: meterId },
+            where: { id: m.id },
             data: {
               earned: { increment: update.earned },
               sharedPartners: currentPartners.join(','),
             },
           });
         }
+
+        ledger[m.id] = newEarned;
+        sharedPartners[m.id] = currentPartners;
       }
 
       // 7. Batch insert meter readings (1 fast query)
@@ -291,7 +351,9 @@ class SimulationEngine {
         });
       }
 
-      // 8. Batch insert trades (1 fast query)
+      // 8. Batch insert trades (1 fast query) — this persists the SAME
+      // `trades` array (same ids/prices/timestamps) that gets cached and
+      // broadcast below, just with a DB-safe unique id suffix.
       if (trades.length > 0) {
         await prisma.trade.createMany({
           data: trades.map((t) => ({
@@ -314,7 +376,18 @@ class SimulationEngine {
         });
       }
 
-      // 9. Broadcast updated state to all connected WebSocket clients
+      // 9. Cache the canonical snapshot for this interval, then broadcast it.
+      this.currentPayload = {
+        tick,
+        playing: state.playing,
+        speed: state.speed,
+        cumulativeBaseline: updatedBaseline,
+        meters: simulatedMeters,
+        trades,
+        ledger,
+        sharedPartners,
+      };
+
       await this.broadcastState();
     } catch (error) {
       console.error('Error running simulation step:', error);
@@ -347,7 +420,12 @@ class SimulationEngine {
     await prisma.meterReading.deleteMany({});
     await prisma.trade.deleteMany({});
 
+    // Invalidate the cache — it describes a tick/trade set that no longer
+    // exists post-reset. refreshSnapshot() below rebuilds it from scratch.
+    this.currentPayload = null;
+
     this.startTimer('1x');
+    await this.refreshSnapshot(62);
     await this.broadcastState();
   }
 
@@ -370,35 +448,51 @@ class SimulationEngine {
     }
   }
 
-  public async getCurrentStatePayload() {
+  /**
+   * Recomputes the snapshot directly from the DB. This is now only used for
+   * cold starts (server just booted, no interval has cleared yet) and for
+   * reset(). The hot path — every tick, every broadcast, every newly
+   * authenticated socket — reuses `this.currentPayload` instead of calling
+   * this, which is the actual propagation fix.
+   */
+  private async refreshSnapshot(tick: number): Promise<StatePayload> {
     const state = await prisma.simulationState.findUnique({ where: { id: 1 } });
     const dbMeters = await prisma.meter.findMany();
 
-    if (!state) return {};
-
-    // Get current tick parameters
-    const simulatedMeters = simulateMetersForTick(state.tick, dbMeters);
+    const simulatedMeters = simulateMetersForTick(tick, dbMeters);
     const trades = optimizeTrades(simulatedMeters);
 
-    // Build ledger maps
     const ledger: Record<string, number> = {};
     const sharedPartners: Record<string, string[]> = {};
-
     dbMeters.forEach((m) => {
       ledger[m.id] = m.earned;
       sharedPartners[m.id] = m.sharedPartners ? m.sharedPartners.split(',') : [];
     });
 
-    return {
-      tick: state.tick,
-      playing: state.playing,
-      speed: state.speed,
-      cumulativeBaseline: state.cumulativeBaseline,
+    this.currentPayload = {
+      tick,
+      playing: state?.playing ?? true,
+      speed: state?.speed ?? '1x',
+      cumulativeBaseline: state?.cumulativeBaseline ?? 0,
       meters: simulatedMeters,
-      trades: trades,
+      trades,
       ledger,
       sharedPartners,
     };
+
+    return this.currentPayload;
+  }
+
+  public async getCurrentStatePayload(): Promise<StatePayload | {}> {
+    if (this.currentPayload) {
+      return this.currentPayload;
+    }
+
+    // Cold-start fallback: nothing has ticked yet in this process and
+    // start() hasn't populated the cache for some reason.
+    const state = await prisma.simulationState.findUnique({ where: { id: 1 } });
+    if (!state) return {};
+    return this.refreshSnapshot(state.tick);
   }
 }
 

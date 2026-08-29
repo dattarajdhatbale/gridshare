@@ -16,6 +16,7 @@ export function PricingPanel({ lmp, supply, demand, pulse, history }: PricingPan
   const height = 80;
 
   const getPoints = (key: 'supply' | 'demand') => {
+    if (history.length < 2) return [];
     return history.map((h, i) => {
       const x = (i / (history.length - 1)) * width;
       // scale y from 5px to height - 5px
@@ -27,11 +28,19 @@ export function PricingPanel({ lmp, supply, demand, pulse, history }: PricingPan
   const supplyPoints = getPoints('supply');
   const demandPoints = getPoints('demand');
 
-  const supplyPath = supplyPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-  const supplyArea = `${supplyPath} L ${width} ${height} L 0 ${height} Z`;
+  const supplyPath = supplyPoints.length > 0
+    ? supplyPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+    : 'M 0 0';
+  const supplyArea = supplyPoints.length > 0
+    ? `${supplyPath} L ${width} ${height} L 0 ${height} Z`
+    : 'M 0 0 Z';
 
-  const demandPath = demandPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-  const demandArea = `${demandPath} L ${width} ${height} L 0 ${height} Z`;
+  const demandPath = demandPoints.length > 0
+    ? demandPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+    : 'M 0 0';
+  const demandArea = demandPoints.length > 0
+    ? `${demandPath} L ${width} ${height} L 0 ${height} Z`
+    : 'M 0 0 Z';
 
   return (
     <section className={`card pricing ${pulse ? 'pulse' : ''}`}>

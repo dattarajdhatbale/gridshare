@@ -13,6 +13,12 @@ interface HeaderProps {
   lifetimeSavings?: number;
   trades?: any[];
   sharedPartners?: string[];
+  // Current simulated tick. Used to give each cleared trade a stable,
+  // per-interval identity for the notification feed below — trade ids
+  // returned by the matching engine are only guaranteed unique *within*
+  // a single tick, not across ticks, so `tick` is required to tell two
+  // different intervals' trades apart.
+  tick?: number;
 }
 
 export function Header({
@@ -23,15 +29,16 @@ export function Header({
   lifetimeSavings = 1248.50,
   trades = [],
   sharedPartners = [],
+  tick,
 }: HeaderProps) {
   const { role, meter, setMeter, logout } = useSession();
 
-  const userName = role === 'operator' 
-    ? 'Grid Operator' 
+  const userName = role === 'operator'
+    ? 'Grid Operator'
     : (meter?.displayName || meter?.name || selectedMeter?.name || 'Resident');
   const meterId = role === 'operator' ? 'SYSTEM' : (meter?.id || selectedMeter?.id || 'M-XX');
   const roleName = role === 'operator' ? 'operator' : (meter?.role || selectedMeter?.role || 'household');
-  
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -42,7 +49,10 @@ export function Header({
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(false);
-  const notifiedPartnersRef = useRef<Set<string>>(new Set());
+  // Tracks which *specific cleared trades* (not which counterparties) we've
+  // already surfaced a notification for. See the effect below for why this
+  // is keyed by tick+buyer+seller rather than by partner id or trade.id.
+  const notifiedTradeKeysRef = useRef<Set<string>>(new Set());
 
   // Renaming states
   const [isRenaming, setIsRenaming] = useState(false);
@@ -78,19 +88,34 @@ export function Header({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Detect trading with new partners in this session
+  // Detect newly cleared trades for this household and surface a notification
+  // for each one.
+  //
+  // THE FIX: this used to dedupe on `partnerId` alone, so a household got
+  // notified the FIRST time it ever traded with a given neighbour and then
+  // never again for the rest of the session — even though the matching
+  // engine clears a brand new trade with that same (usually nearest) neighbour
+  // on almost every subsequent interval. That made the Notifications panel go
+  // silent almost immediately, which read as "not receiving updates".
+  //
+  // The fix identifies a cleared trade by `tick + buyer + seller`, which is
+  // stable and unique per interval (a given buyer/seller pair can clear at
+  // most once per tick in this matching engine), instead of by the matching
+  // engine's `trade.id`, which only resets to the same sequence every tick
+  // and is therefore not safe to use as a cross-tick identity.
   useEffect(() => {
-    if (role !== 'household' || !trades || !meterId) return;
+    if (role !== 'household' || !trades || !meterId || tick === undefined) return;
 
     trades.forEach((trade) => {
       const isSeller = trade.seller === meterId;
       const partnerId = isSeller ? trade.buyer : trade.seller;
+      const tradeKey = `${tick}-${trade.buyer}-${trade.seller}`;
 
-      if (!notifiedPartnersRef.current.has(partnerId)) {
-        notifiedPartnersRef.current.add(partnerId);
+      if (!notifiedTradeKeysRef.current.has(tradeKey)) {
+        notifiedTradeKeysRef.current.add(tradeKey);
 
         const newNotif = {
-          id: `${trade.id}-${Date.now()}`,
+          id: `${tradeKey}-${Date.now()}`,
           partnerId,
           amt: trade.delivered.toFixed(2),
           type: isSeller ? 'sell' : 'buy',
@@ -101,7 +126,13 @@ export function Header({
         setUnreadNotifications(true);
       }
     });
-  }, [trades, role, meterId]);
+
+    // Keep the dedupe set from growing unbounded over a long-running session.
+    if (notifiedTradeKeysRef.current.size > 500) {
+      const trimmed = Array.from(notifiedTradeKeysRef.current).slice(-250);
+      notifiedTradeKeysRef.current = new Set(trimmed);
+    }
+  }, [trades, role, meterId, tick]);
 
   // Sync renaming input when profile changes or opens
   useEffect(() => {
@@ -161,21 +192,21 @@ export function Header({
       const res = await authFetch('/api/simulation/history/trades?limit=all');
       if (!res.ok) throw new Error('Failed to fetch trades for export');
       const allTrades = await res.json();
-      
+
       const headers = [
-        'id', 'tick', 'buyer', 'seller', 'sent', 'delivered', 'lossKWh', 'distance', 
-        'lossFrac', 'nCharge', 'energyPrice', 'buyerUnitPrice', 'buyerPayment', 
+        'id', 'tick', 'buyer', 'seller', 'sent', 'delivered', 'lossKWh', 'distance',
+        'lossFrac', 'nCharge', 'energyPrice', 'buyerUnitPrice', 'buyerPayment',
         'sellerRevenue', 'networkRevenue', 'createdAt', 'role'
       ];
-      
+
       const csvRows = [headers.join(',')];
-      
+
       for (const trade of allTrades) {
         let computedRole = 'operator';
         if (role === 'household') {
           computedRole = (trade.buyer === meterId) ? 'buyer' : 'seller';
         }
-        
+
         const rowValues = [
           trade.id,
           trade.tick,
@@ -195,7 +226,7 @@ export function Header({
           trade.createdAt,
           computedRole
         ];
-        
+
         const escapedRow = rowValues.map(val => {
           const s = String(val === null || val === undefined ? '' : val);
           if (s.includes(',') || s.includes('"') || s.includes('\n')) {
@@ -203,10 +234,10 @@ export function Header({
           }
           return s;
         }).join(',');
-        
+
         csvRows.push(escapedRow);
       }
-      
+
       const csvContent = csvRows.join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -295,7 +326,7 @@ export function Header({
 
           {showHistory && (
             <div className="absolute right-0 mt-3 w-[320px] sm:w-[360px] border border-[var(--card-border)] rounded-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.38)] p-5 z-[150] animate-[scaleUp_0.2s_cubic-bezier(0.16,1,0.3,1)]" style={{ backgroundColor: theme === 'light' ? '#FFFFFF' : '#282828' }}>
-              
+
               {/* Header */}
               <div className="flex justify-between items-center pb-3 border-b border-[var(--line)]">
                 <div className="flex items-center gap-2">
@@ -439,12 +470,11 @@ export function Header({
                 <div className="my-4 max-h-[220px] overflow-y-auto pr-1 flex flex-col gap-2.5 custom-scrollbar">
                   {notifications.map((notif) => (
                     <div key={notif.id} className="flex gap-2.5 items-start p-2.5 rounded-[12px] bg-[rgba(45,45,45,0.02)] dark:bg-[rgba(215,201,174,0.03)] border border-[var(--line)] text-[12px]">
-                      <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${
-                        notif.type === 'sell' ? 'bg-[#E5C378]' : 'bg-[#C06B22]'
-                      }`} />
+                      <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${notif.type === 'sell' ? 'bg-[#E5C378]' : 'bg-[#C06B22]'
+                        }`} />
                       <div className="flex-1 flex flex-col gap-0.5">
                         <span className="text-[var(--text-primary)] font-medium leading-tight">
-                          {notif.type === 'sell' 
+                          {notif.type === 'sell'
                             ? `Energy shared to [${notif.partnerId}]`
                             : `Energy drawn from [${notif.partnerId}]`
                           }
@@ -555,7 +585,7 @@ export function Header({
               <div className="my-4 p-4 bg-[#F5EFE6] dark:bg-[rgba(215,201,174,0.06)] border border-[var(--line)] rounded-[18px]">
                 <div className="flex justify-between items-center mb-1">
                   <label className="font-mono text-[9px] font-bold text-[var(--text-secondary)] tracking-[0.08em] uppercase flex items-center gap-1">
-                    <Sparkles size={11} className="text-[#C06B22] dark:text-[#E5C378]" /> 
+                    <Sparkles size={11} className="text-[#C06B22] dark:text-[#E5C378]" />
                     {role === 'operator' ? 'TOTAL COMMUNITY BENEFIT' : 'LIFETIME SAVINGS VS GRID'}
                   </label>
                   <span className="font-mono text-[10px] text-[var(--text-primary)] font-bold bg-[rgba(45,45,45,0.08)] dark:bg-[rgba(215,201,174,0.15)] px-1.5 py-0.5 rounded">
@@ -566,8 +596,8 @@ export function Header({
                   ₹{lifetimeSavings.toFixed(2)}
                 </div>
                 <span className="text-[11.5px] text-[var(--text-secondary)] block leading-snug">
-                  {role === 'operator' 
-                    ? 'Aggregate economic benefit across all local households' 
+                  {role === 'operator'
+                    ? 'Aggregate economic benefit across all local households'
                     : 'Total capital retained vs standard utility tariff'}
                 </span>
               </div>
@@ -595,7 +625,7 @@ export function Header({
               </div>
 
               {/* Logout Button */}
-              <button 
+              <button
                 onClick={logout}
                 className="w-full mt-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[12.5px] font-semibold rounded-[14px] transition-all border border-red-500/20 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-[0.99] hover:scale-[1.01]"
               >

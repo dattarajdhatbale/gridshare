@@ -97,6 +97,7 @@ function DashboardContainer() {
         try {
           const data = JSON.parse(event.data);
           if (data.tick !== undefined) {
+            console.log(data);
             setTick(data.tick);
             setPlaying(data.playing);
             setSpeed(data.speed);

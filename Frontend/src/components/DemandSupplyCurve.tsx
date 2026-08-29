@@ -50,7 +50,7 @@ export function DemandSupplyCurve({ supply, demand, history }: DemandSupplyCurve
 
       <div className="flex gap-5 text-[13px]">
         <div className="flex items-center gap-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-[var(--text-primary)] dark:bg-[#D7C9AE]" />
+          <span className="inline-block w-2 h-2 rounded-full bg-[var(--text-primary)] dark:bg-[#A54657]" />
           <strong>{supply.toFixed(1)} kW</strong>
           <span className="text-[var(--text-muted)]">Supply</span>
         </div>
@@ -68,11 +68,11 @@ export function DemandSupplyCurve({ supply, demand, history }: DemandSupplyCurve
           className="w-full h-full block"
         >
           {/* Areas */}
-          <path d={supplyArea} fill="rgba(45, 45, 45, 0.06)" className="dark:fill-[rgba(215,201,174,0.06)]" />
+          <path d={supplyArea} fill="rgba(45, 45, 45, 0.06)" className="dark:fill-[rgba(165,70,87,0.06)]" />
           <path d={demandArea} fill="rgba(192, 107, 34, 0.06)" className="dark:fill-[rgba(224,152,82,0.06)]" />
 
           {/* Lines */}
-          <path d={supplyPath} fill="none" stroke="currentColor" className="text-[var(--text-primary)] dark:text-[#D7C9AE]" strokeWidth="2.5" />
+          <path d={supplyPath} fill="none" stroke="currentColor" className="text-[var(--text-primary)] dark:text-[#A54657]" strokeWidth="2.5" />
           <path d={demandPath} fill="none" stroke="#C06B22" className="dark:stroke-[#E09852]" strokeWidth="2.5" />
         </svg>
 

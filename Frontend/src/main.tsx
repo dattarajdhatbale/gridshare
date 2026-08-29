@@ -104,7 +104,7 @@ function DashboardContainer() {
     ws.onerror = (err) => console.error('WebSocket connection error:', err);
 
     return () => ws.close();
-  }, [token, tick]);
+  }, [token]);
 
   // Load supply-demand historical curve entries from backend
   useEffect(() => {

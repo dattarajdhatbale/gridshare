@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { CircleHelp, Sun, Moon, Bell, BellOff, Sparkles, TrendingUp, ShieldCheck, User, Edit3, Check, X, LogOut } from 'lucide-react';
+import { CircleHelp, Sun, Moon, Bell, BellOff, Sparkles, TrendingUp, ShieldCheck, User, Edit3, Check, X, LogOut, History, Download } from 'lucide-react';
 import logo from '../assets/logo.svg';
 import { Meter } from '../simulation/model';
 import { useSession } from '../auth/SessionContext';
@@ -24,6 +24,11 @@ export function Header({
   
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [tradesHistory, setTradesHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Renaming states
   const [isRenaming, setIsRenaming] = useState(false);
@@ -32,6 +37,7 @@ export function Header({
 
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const historyRef = useRef<HTMLDivElement>(null);
 
   const today = new Date();
   const dayName = today.toLocaleDateString('en-US', { weekday: 'long' });
@@ -49,6 +55,9 @@ export function Header({
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setShowProfile(false);
         setIsRenaming(false);
+      }
+      if (historyRef.current && !historyRef.current.contains(event.target as Node)) {
+        setShowHistory(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -94,6 +103,93 @@ export function Header({
     : (meter?.displayName || meter?.name || selectedMeter?.name || 'Resident');
   const meterId = role === 'operator' ? 'SYSTEM' : (meter?.id || selectedMeter?.id || 'M-XX');
   const roleName = role === 'operator' ? 'operator' : (meter?.role || selectedMeter?.role || 'household');
+
+  const fetchTradesHistory = async () => {
+    setLoadingHistory(true);
+    setHistoryError(null);
+    try {
+      const res = await authFetch('/api/simulation/history/trades');
+      if (!res.ok) throw new Error('Failed to load transaction history');
+      const data = await res.json();
+      setTradesHistory(data);
+    } catch (err: any) {
+      console.error('Error fetching trade history:', err);
+      setHistoryError(err.message || 'Error loading transaction history');
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+    try {
+      const res = await authFetch('/api/simulation/history/trades?limit=all');
+      if (!res.ok) throw new Error('Failed to fetch trades for export');
+      const allTrades = await res.json();
+      
+      const headers = [
+        'id', 'tick', 'buyer', 'seller', 'sent', 'delivered', 'lossKWh', 'distance', 
+        'lossFrac', 'nCharge', 'energyPrice', 'buyerUnitPrice', 'buyerPayment', 
+        'sellerRevenue', 'networkRevenue', 'createdAt', 'role'
+      ];
+      
+      const csvRows = [headers.join(',')];
+      
+      for (const trade of allTrades) {
+        let computedRole = 'operator';
+        if (role === 'household') {
+          computedRole = (trade.buyer === meterId) ? 'buyer' : 'seller';
+        }
+        
+        const rowValues = [
+          trade.id,
+          trade.tick,
+          trade.buyer,
+          trade.seller,
+          trade.sent,
+          trade.delivered,
+          trade.lossKWh,
+          trade.distance,
+          trade.lossFrac,
+          trade.nCharge,
+          trade.energyPrice,
+          trade.buyerUnitPrice,
+          trade.buyerPayment,
+          trade.sellerRevenue,
+          trade.networkRevenue,
+          trade.createdAt,
+          computedRole
+        ];
+        
+        const escapedRow = rowValues.map(val => {
+          const s = String(val === null || val === undefined ? '' : val);
+          if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+            return `"${s.replace(/"/g, '""')}"`;
+          }
+          return s;
+        }).join(',');
+        
+        csvRows.push(escapedRow);
+      }
+      
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const todayDate = new Date().toISOString().split('T')[0];
+      link.setAttribute('href', url);
+      link.setAttribute('download', `gridshare-transactions-${todayDate}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err: any) {
+      console.error('Error exporting trades:', err);
+      alert(err.message || 'Failed to export transaction history CSV');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <header className="h-[76px] bg-[var(--header-bg)] border-b border-[var(--header-border)] flex items-center px-4 sm:px-6 justify-between sticky top-0 z-[100] transition-all duration-300">
@@ -142,6 +238,124 @@ export function Header({
         >
           <CircleHelp size={18} />
         </button>
+
+        {/* History Dropdown Container */}
+        <div className="relative" ref={historyRef}>
+          <button
+            className={`bg-[var(--button-outline-bg)] border ${showHistory ? 'border-[var(--text-primary)] text-[var(--text-primary)]' : 'border-[var(--button-outline-border)] text-[var(--text-secondary)]'} w-[38px] h-[38px] rounded-full grid place-items-center cursor-pointer relative transition-all duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] hover:bg-[var(--button-outline-hover)] hover:-translate-y-[1px]`}
+            onClick={() => {
+              const next = !showHistory;
+              setShowHistory(next);
+              setShowNotifications(false);
+              setShowProfile(false);
+              if (next) {
+                fetchTradesHistory();
+              }
+            }}
+            title="Transaction History"
+            aria-label="Transaction History"
+          >
+            <History size={18} />
+          </button>
+
+          {showHistory && (
+            <div className="absolute right-0 mt-3 w-[320px] sm:w-[360px] border border-[var(--card-border)] rounded-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.38)] p-5 z-[150] animate-[scaleUp_0.2s_cubic-bezier(0.16,1,0.3,1)]" style={{ backgroundColor: theme === 'light' ? '#FFFFFF' : '#282828' }}>
+              
+              {/* Header */}
+              <div className="flex justify-between items-center pb-3 border-b border-[var(--line)]">
+                <div className="flex items-center gap-2">
+                  <History size={16} className="text-[#C06B22] dark:text-[#E5C378]" />
+                  <span className="font-semibold font-title text-[15px] text-[var(--text-primary)]">History</span>
+                </div>
+                <button
+                  onClick={handleExportCSV}
+                  disabled={isExporting}
+                  className="font-mono text-[9px] font-bold uppercase py-1 px-3 rounded-full bg-[rgba(45,45,45,0.08)] hover:bg-[rgba(45,45,45,0.15)] text-[var(--text-primary)] dark:bg-[rgba(215,201,174,0.12)] dark:hover:bg-[rgba(215,201,174,0.2)] dark:text-[#D7C9AE] border border-[var(--line)] cursor-pointer flex items-center gap-1 transition-all disabled:opacity-50"
+                  title="Export to CSV"
+                >
+                  <Download size={10} />
+                  <span>Export CSV</span>
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="my-4 max-h-[260px] overflow-y-auto pr-1 flex flex-col gap-2 custom-scrollbar">
+                {loadingHistory ? (
+                  <div className="py-8 flex flex-col items-center justify-center gap-2 text-[var(--text-muted)] text-[12.5px]">
+                    <span className="w-5 h-5 border-2 border-t-transparent border-[var(--text-primary)] rounded-full animate-spin" />
+                    <span>Loading transactions...</span>
+                  </div>
+                ) : historyError ? (
+                  <div className="py-6 text-center text-red-500 text-[12.5px]">
+                    {historyError}
+                  </div>
+                ) : tradesHistory.length === 0 ? (
+                  <div className="py-8 text-center text-[var(--text-muted)] text-[12.5px]">
+                    No transactions recorded yet.
+                  </div>
+                ) : (
+                  tradesHistory.map((trade) => {
+                    const isBuyer = role === 'household' && (trade.buyer === meterId);
+                    const isSeller = role === 'household' && (trade.seller === meterId);
+
+                    const timeStr = new Date(trade.createdAt).toLocaleTimeString(undefined, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: false
+                    });
+                    const dateStr = new Date(trade.createdAt).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric'
+                    });
+
+                    return (
+                      <div key={trade.id} className="flex justify-between items-center p-2.5 rounded-[12px] bg-[rgba(45,45,45,0.02)] dark:bg-[rgba(215,201,174,0.03)] border border-[var(--line)] text-[12px]">
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono font-semibold text-[var(--text-primary)]">{trade.buyer}</span>
+                            <span className="text-[var(--text-muted)] text-[10px]">→</span>
+                            <span className="font-mono font-semibold text-[var(--text-primary)]">{trade.seller}</span>
+                          </div>
+                          <span className="text-[10px] text-[var(--text-muted)] font-mono">{dateStr} {timeStr}</span>
+                        </div>
+
+                        <div className="text-right flex flex-col items-end gap-0.5">
+                          <span className="font-semibold text-[var(--text-primary)]">{trade.delivered.toFixed(2)} kWh</span>
+                          {role === 'operator' ? (
+                            <span className="text-[var(--text-secondary)] font-medium font-mono text-[11px]">
+                              ₹{trade.buyerPayment.toFixed(2)}
+                            </span>
+                          ) : isBuyer ? (
+                            <span className="text-[var(--red)] font-semibold font-mono text-[11px]">
+                              -₹{trade.buyerPayment.toFixed(2)}
+                            </span>
+                          ) : isSeller ? (
+                            <span className="text-green-500 dark:text-green-400 font-semibold font-mono text-[11px]">
+                              +₹{trade.sellerRevenue.toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="text-[var(--text-muted)] font-mono text-[11px]">
+                              ₹{trade.buyerPayment.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="pt-2 border-t border-[var(--line)] flex justify-center items-center">
+                <span className="font-mono text-[9px] text-[var(--text-muted)] flex items-center gap-1">
+                  Showing last {tradesHistory.length} transactions
+                </span>
+              </div>
+
+            </div>
+          )}
+        </div>
 
         {/* Notification Bell Dropdown Container */}
         <div className="relative" ref={notifRef}>

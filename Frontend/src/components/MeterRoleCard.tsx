@@ -18,7 +18,11 @@ export function MeterRoleCard({
   const seller = meter.status === 'surplus';
 
   // Find all active trades in this interval for the selected meter
-  const activeTrades = trades.filter((t) => (seller ? t.seller === meter.name : t.buyer === meter.name));
+  const activeTrades = trades.filter((t) => (
+    seller 
+      ? (t.seller === meter.id || t.seller === meter.name) 
+      : (t.buyer === meter.id || t.buyer === meter.name)
+  ));
 
   const energyAmount = seller ? meter.exportKWh : meter.importKWh;
 

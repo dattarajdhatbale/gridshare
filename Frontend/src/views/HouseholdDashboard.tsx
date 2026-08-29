@@ -164,9 +164,7 @@ export function HouseholdDashboard({
       const isSeller = t.seller === liveMyMeter.id || t.seller === liveMyMeter.name;
       const partnerName = isSeller ? t.buyer : t.seller;
       const partnerMeter = meters.find(m => m.name === partnerName || m.id === partnerName);
-      const partnerLabel = partnerMeter 
-        ? `${partnerMeter.displayName || partnerMeter.name} (${partnerMeter.id})`
-        : partnerName;
+      const partnerLabel = partnerMeter ? partnerMeter.id : partnerName;
 
       const amt = t.delivered.toFixed(2);
       const rate = t.energyPrice.toFixed(2);
@@ -176,14 +174,14 @@ export function HouseholdDashboard({
         return {
           id: t.id,
           type: 'sell',
-          text: `You sold ${amt} kWh to ${partnerLabel} at ₹${rate}/kWh (loss: ${loss}%)`,
+          text: `${amt} kWh to [${partnerLabel}]`,
           value: `+₹${t.sellerRevenue.toFixed(2)}`,
         };
       } else {
         return {
           id: t.id,
           type: 'buy',
-          text: `You bought ${amt} kWh from ${partnerLabel} at ₹${rate}/kWh (loss: ${loss}%)`,
+          text: `${amt} kWh from [${partnerLabel}]`,
           value: `-₹${t.buyerPayment.toFixed(2)}`,
         };
       }

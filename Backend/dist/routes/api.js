@@ -81,4 +81,40 @@ router.get('/history', middleware_1.requireAuth, async (req, res) => {
         res.status(500).json({ error: 'Failed to retrieve simulation history.' });
     }
 });
+// 6. GET /history/trades - fetch list of transactions (trades) for current user (or all if operator)
+router.get('/history/trades', middleware_1.requireAuth, async (req, res) => {
+    try {
+        const limitQuery = req.query.limit;
+        let limit = 500;
+        if (limitQuery !== undefined) {
+            if (limitQuery === 'none' || limitQuery === 'all') {
+                limit = 1000000;
+            }
+            else {
+                const parsedLimit = parseInt(limitQuery, 10);
+                if (!isNaN(parsedLimit) && parsedLimit > 0) {
+                    limit = parsedLimit;
+                }
+            }
+        }
+        const { role, meterId } = req.session;
+        const trades = await prismaClient_1.default.trade.findMany({
+            where: role === 'household' ? {
+                OR: [
+                    { buyer: meterId },
+                    { seller: meterId },
+                ],
+            } : undefined,
+            orderBy: {
+                createdAt: 'desc',
+            },
+            take: limit,
+        });
+        res.json(trades);
+    }
+    catch (error) {
+        console.error('Error fetching trades history:', error);
+        res.status(500).json({ error: 'Failed to retrieve trade history.' });
+    }
+});
 exports.default = router;

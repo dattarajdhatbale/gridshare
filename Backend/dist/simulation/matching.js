@@ -52,8 +52,8 @@ function optimizeTrades(meters) {
             tradeCounter++;
             trades.push({
                 id: `T-${1000 + tradeCounter}`,
-                buyer: b.name,
-                seller: s.name,
+                buyer: b.id,
+                seller: s.id,
                 sent,
                 delivered,
                 kwh: delivered,
